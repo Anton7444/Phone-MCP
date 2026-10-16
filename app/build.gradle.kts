@@ -1,3 +1,4 @@
+import java.security.MessageDigest
 import java.util.Properties
 
 plugins {
@@ -99,7 +100,7 @@ val verifyCloudflared by tasks.registering {
     val bin = file("src/main/jniLibs/arm64-v8a/libcloudflared.so")
     inputs.file(bin)
     doLast {
-        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        val digest = MessageDigest.getInstance("SHA-256")
         bin.inputStream().use { input ->
             val buf = ByteArray(1 shl 16)
             while (true) {
