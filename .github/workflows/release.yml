@@ -1,10 +1,11 @@
 name: Release
 
-# Push a tag such as v1.2.0 to build, sign and publish a GitHub Release.
-# The tag must match versionName in app/build.gradle.kts.
+# Either push a tag such as v1.2.0, or run this workflow by hand on main (Actions → Release → Run workflow),
+# which creates the tag v<versionName> itself. Either way the tag must match versionName in app/build.gradle.kts.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -23,14 +24,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check tag matches versionName
+      - name: Work out the release tag
         run: |
           version=$(sed -n 's/^ *versionName = "\(.*\)"/\1/p' app/build.gradle.kts)
-          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match versionName $version"
-            exit 1
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+              echo "::error::Run this workflow on main, not $GITHUB_REF_NAME"
+              exit 1
+            fi
+            tag="v$version"
+            if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null; then
+              echo "::error::Tag $tag already exists; bump versionName first"
+              exit 1
+            fi
+          else
+            tag="$GITHUB_REF_NAME"
+            if [ "v$version" != "$tag" ]; then
+              echo "::error::Tag $tag does not match versionName $version"
+              exit 1
+            fi
           fi
           echo "VERSION=$version" >> "$GITHUB_ENV"
+          echo "TAG=$tag" >> "$GITHUB_ENV"
 
       - uses: actions/setup-java@v4
         with:
@@ -91,5 +106,6 @@ jobs:
 
           Check with \`apksigner verify --print-certs phone-mcp-$VERSION.apk\`.
           NOTES
-          gh release create "$GITHUB_REF_NAME" "phone-mcp-$VERSION.apk" "phone-mcp-$VERSION.apk.sha256" \
-            --title "Phone MCP $VERSION" --notes-file notes.md --generate-notes --verify-tag
+          # On a manual run the tag does not exist yet: gh creates it on the commit that was built.
+          gh release create "$TAG" "phone-mcp-$VERSION.apk" "phone-mcp-$VERSION.apk.sha256" \
+            --target "$GITHUB_SHA" --title "Phone MCP $VERSION" --notes-file notes.md --generate-notes
