@@ -81,7 +81,7 @@ or set `PHONEMCP_STORE_FILE`, `PHONEMCP_STORE_PASSWORD`, `PHONEMCP_KEY_ALIAS` an
 | `KEY_ALIAS` | key alias |
 | `KEY_PASSWORD` | key password |
 
-Bump `versionCode` and `versionName` in `app/build.gradle.kts`, merge, then tag the same version:
+Bump `versionCode` and `versionName` in `app/build.gradle.kts` and merge. Then either open **Actions → Release → Run workflow** on `main` (it creates the tag `v<versionName>` itself), or push the tag yourself:
 
 ```
 git tag v1.2.0 && git push origin v1.2.0
