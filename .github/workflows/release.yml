@@ -1,0 +1,95 @@
+name: Release
+
+# Push a tag such as v1.2.0 to build, sign and publish a GitHub Release.
+# The tag must match versionName in app/build.gradle.kts.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # SHA-256 of the release signing certificate, as published in the README.
+  CERT_SHA256: 577048407bb56cc11030f82661f9c036d366d64572fb8ccbdc527c8716ab2625
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tag matches versionName
+        run: |
+          version=$(sed -n 's/^ *versionName = "\(.*\)"/\1/p' app/build.gradle.kts)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match versionName $version"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Restore signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::Secret KEYSTORE_BASE64 is not set; refusing to publish a debug-signed release"
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/keystore"
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/keystore/release.jks"
+          echo "PHONEMCP_STORE_FILE=$RUNNER_TEMP/keystore/release.jks" >> "$GITHUB_ENV"
+
+      - name: Unit tests and release build
+        env:
+          PHONEMCP_STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          PHONEMCP_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          PHONEMCP_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleRelease
+
+      - name: Verify signature
+        run: |
+          apksigner="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner"
+          apk=app/build/outputs/apk/release/app-release.apk
+          "$apksigner" verify --print-certs "$apk" | tee signers.txt
+          if ! grep -qi "certificate SHA-256 digest: $CERT_SHA256" signers.txt; then
+            echo "::error::APK is not signed with the published release certificate"
+            exit 1
+          fi
+          cp "$apk" "phone-mcp-$VERSION.apk"
+          sha256sum "phone-mcp-$VERSION.apk" > "phone-mcp-$VERSION.apk.sha256"
+
+      - name: Remove signing key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/keystore"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          apk_sha=$(cut -d' ' -f1 "phone-mcp-$VERSION.apk.sha256")
+          cat > notes.md <<NOTES
+          ## Install
+          Download \`phone-mcp-$VERSION.apk\` below. Needs Android 11+, arm64, and root or Shizuku.
+
+          If you installed a build from before the public release, uninstall it first: it was signed with a different key.
+
+          ## Verify
+          - APK SHA-256: \`$apk_sha\`
+          - Signing certificate SHA-256: \`$CERT_SHA256\`
+
+          Check with \`apksigner verify --print-certs phone-mcp-$VERSION.apk\`.
+          NOTES
+          gh release create "$GITHUB_REF_NAME" "phone-mcp-$VERSION.apk" "phone-mcp-$VERSION.apk.sha256" \
+            --title "Phone MCP $VERSION" --notes-file notes.md --generate-notes --verify-tag

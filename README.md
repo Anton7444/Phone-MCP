@@ -71,6 +71,24 @@ or set `PHONEMCP_STORE_FILE`, `PHONEMCP_STORE_PASSWORD`, `PHONEMCP_KEY_ALIAS` an
 
 `libcloudflared.so` is the unmodified official Cloudflare `cloudflared` linux-arm64 binary (Apache License 2.0). Version, download link and SHA-256 are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); the build fails if the file does not match that hash.
 
+### Releasing
+`.github/workflows/release.yml` builds, signs and publishes a GitHub Release when a `v*` tag is pushed. It needs these repository secrets (Settings → Secrets and variables → Actions):
+
+| Secret | Value |
+| --- | --- |
+| `KEYSTORE_BASE64` | the keystore file, base64-encoded (`base64 -w0 release.jks`) |
+| `KEYSTORE_PASSWORD` | keystore password |
+| `KEY_ALIAS` | key alias |
+| `KEY_PASSWORD` | key password |
+
+Bump `versionCode` and `versionName` in `app/build.gradle.kts`, merge, then tag the same version:
+
+```
+git tag v1.2.0 && git push origin v1.2.0
+```
+
+The workflow refuses to publish if the tag does not match `versionName`, if the secrets are missing, or if the APK is not signed with the certificate above.
+
 ## Project layout
 `app/src/main/java/app/phonemcp/`
 
