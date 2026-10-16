@@ -23,6 +23,9 @@ class PhoneMcpApp : Application() {
     /** The backend the running server uses; null while stopped. */
     @Volatile var activeExecutor: Executor? = null
 
+    /** True while Phone MCP's own UI is on screen. Synthetic input is refused then, so the AI cannot change its own settings. */
+    @Volatile var uiVisible = false
+
     override fun onCreate() {
         super.onCreate()
         settings = SettingsRepository(this)

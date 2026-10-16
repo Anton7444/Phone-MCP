@@ -291,6 +291,8 @@
     <string name="bio_start_sub">請確認是你本人</string>
     <string name="bio_allow_title">允許這個操作</string>
     <string name="bio_allow_sub">請確認是你本人，才能允許一次</string>
+    <string name="bio_settings_title">變更安全設定</string>
+    <string name="bio_settings_sub">請確認是你本人，才能給 AI 更多權限</string>
 
     <!-- notifications -->
     <string name="ch_service">伺服器運行中</string>
