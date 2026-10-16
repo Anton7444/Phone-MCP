@@ -6,3 +6,10 @@ local.properties
 
 keystore.properties
 keystore/
+*.keystore
+*.apk
+*.aab
+*.iml
+captures/
+.kotlin/
+.DS_Store
