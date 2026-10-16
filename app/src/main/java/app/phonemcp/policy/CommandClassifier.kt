@@ -163,7 +163,8 @@ object CommandClassifier {
     )
     private val FIND_MUTATING = setOf("-delete", "-exec", "-execdir", "-ok", "-okdir", "-fprint", "-fprint0", "-fprintf", "-fls")
     private val LOGCAT_FLAGS = setOf("-d", "-t", "-T", "-v", "-b", "-s", "-D", "-e")
-    private val SAFE_REDIRECT = Regex("""\d?>\s*&\d|\d?>\s*/dev/null""")
+    // Only an exact fd duplicate or /dev/null counts: `>/dev/nullx` and bash's `>&2x` write a real file.
+    private val SAFE_REDIRECT = Regex("""\d?>\s*(?:&\d|/dev/null)(?=$|[\s;&|)])""")
 
     private fun argsReadOnly(name: String, args: List<String>): Boolean = when (name) {
         in PLAIN -> true

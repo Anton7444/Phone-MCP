@@ -410,7 +410,7 @@ private fun TunnelDialog(vm: AppViewModel, s: AppSettings, onDismiss: () -> Unit
                         label = { Text(stringResource(R.string.named_host)) },
                         colors = fieldColors(), modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                     )
-                    Text(stringResource(R.string.named_help), fontSize = 12.sp, lineHeight = 18.sp, color = C.Muted, modifier = Modifier.padding(top = 8.dp))
+                    Text(stringResource(R.string.named_help, s.port), fontSize = 12.sp, lineHeight = 18.sp, color = C.Muted, modifier = Modifier.padding(top = 8.dp))
                 }
             }
         },
