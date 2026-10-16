@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Phone MCP</string>
+
+    <!-- common -->
+    <string name="back">Back</string>
+    <string name="continue_">Continue</string>
+    <string name="cancel">Cancel</string>
+    <string name="close">Close</string>
+    <string name="save">Save</string>
+    <string name="add">Add</string>
+    <string name="remove">Remove</string>
+    <string name="share">Share</string>
+    <string name="reveal">Show</string>
+    <string name="hide">Hide</string>
+    <string name="fix">Fix</string>
+    <string name="retry">Retry</string>
+    <string name="recheck">Re-check</string>
+    <string name="switch_anyway">Switch anyway, fix it later</string>
+    <string name="checking">Checking…</string>
+    <string name="dismiss">Dismiss</string>
+    <string name="later">Later</string>
+    <string name="never">Never</string>
+    <string name="on">On</string>
+    <string name="off">Off</string>
+    <string name="set_btn">Set</string>
+    <string name="open_settings_btn">Open</string>
+
+    <!-- welcome -->
+    <string name="welcome_tagline">Let an MCP client safely operate your phone: run commands and fetch files.</string>
+    <string name="welcome_f1_t">Connect any MCP client in one tap</string>
+    <string name="welcome_f1_d">A tunnel is created automatically. Paste the URL and go.</string>
+    <string name="welcome_f2_t">Root or Shizuku, either works</string>
+    <string name="welcome_f2_d">Use root if you have it, otherwise Shizuku.</string>
+    <string name="welcome_f3_t">You have the final say</string>
+    <string name="welcome_f3_d">Dangerous actions wait for you on the phone.</string>
+    <string name="welcome_warning">Once it is on, the AI can run commands and read or write files on your phone. Only use it in an environment you trust.</string>
+    <string name="start_setup">Start setup</string>
+
+    <!-- mode -->
+    <string name="step_n_of_3">Step %1$d / 3</string>
+    <string name="mode_title">Choose permission mode</string>
+    <string name="mode_sub">Decides which identity the app uses to run commands on your phone. You can switch later in Settings.</string>
+    <string name="mode_root_name">Root</string>
+    <string name="mode_shizuku_name">Shizuku</string>
+    <string name="mode_basic_name">Basic</string>
+    <string name="mode_none">Not set</string>
+    <string name="badge_su">su detected</string>
+    <string name="badge_recommended">Recommended</string>
+    <string name="badge_installed">Installed</string>
+    <string name="badge_not_installed">Not installed</string>
+    <string name="badge_no_root">No root needed</string>
+    <string name="root_pro">Full system access, can read other apps\' data</string>
+    <string name="root_con">Needs a rooted phone (Magisk or KernelSU)</string>
+    <string name="shiz_pro">No root needed; runs commands as the shell user</string>
+    <string name="shiz_con">Cannot read other apps\' private data; Shizuku must be restarted after every reboot</string>
+    <string name="mode_skip">Skip privileges, basic features only</string>
+
+    <!-- root check -->
+    <string name="check_root_title">Check root</string>
+    <string name="check_root_sub">All three steps must pass.</string>
+    <string name="rc_step1">su found</string>
+    <string name="rc_step2">Root permission granted</string>
+    <string name="rc_step3">Test command: id</string>
+    <string name="rc_hint_missing">No su binary found. This phone does not look rooted. Go back and use Shizuku instead.</string>
+    <string name="rc_hint_denied">Open Magisk or KernelSU, go to Superuser, allow Phone MCP, then re-check.</string>
+    <string name="rc_hint_notroot">su ran, but the command did not run as root.</string>
+
+    <!-- shizuku check -->
+    <string name="check_shiz_title">Set up Shizuku</string>
+    <string name="shiz_sub_ok">All set.</string>
+    <string name="shiz_sub_missing">Shizuku is not installed yet.</string>
+    <string name="shiz_sub_old">Your Shizuku is too old.</string>
+    <string name="shiz_sub_not_running">One more step: Shizuku is not running.</string>
+    <string name="shiz_sub_no_perm">Nearly there: allow Phone MCP in Shizuku.</string>
+    <string name="shiz_sub_test">The test command did not run as the shell user.</string>
+    <string name="sk1">Shizuku installed</string>
+    <string name="sk1_fail">Shizuku is not installed</string>
+    <string name="sk2">Shizuku is running</string>
+    <string name="sk3">Authorize this app</string>
+    <string name="sk4">Test command</string>
+    <string name="shiz_install_hint">Install Shizuku, then come back here. This page checks automatically.</string>
+    <string name="shiz_download">Download Shizuku</string>
+    <string name="shiz_old">Update Shizuku to version 11 or newer.</string>
+    <string name="shiz_start_hint">Not running. Start it with wireless debugging, no computer needed (Android 11 or newer).</string>
+    <string name="shiz_step_a">Open Developer options, then Wireless debugging</string>
+    <string name="shiz_step_b">In Shizuku tap Pair and enter the pairing code</string>
+    <string name="shiz_step_c">Back in Shizuku, tap Start</string>
+    <string name="shiz_open">Open Shizuku</string>
+    <string name="shiz_grant">Authorize</string>
+    <string name="shiz_perm_hint">If the dialog does not appear, open Shizuku, go to Authorized apps and allow Phone MCP.</string>
+    <string name="shiz_test_failed">The test command did not report the shell user. Re-check, or restart Shizuku.</string>
+
+    <!-- tunnel -->
+    <string name="tunnel_title">How should your MCP client reach this phone?</string>
+    <string name="tunnel_sub">You can change this later in Settings.</string>
+    <string name="tunnel_quick">Quick Tunnel</string>
+    <string name="tunnel_quick_d">Free Cloudflare URL, no account. The URL changes every time you start.</string>
+    <string name="tunnel_named">Cloudflare Named Tunnel</string>
+    <string name="tunnel_named_d">Fixed URL using your own Cloudflare tunnel token.</string>
+    <string name="tunnel_tailscale">Tailscale</string>
+    <string name="tunnel_tailscale_d">Reachable inside your tailnet only. Needs the Tailscale app running.</string>
+    <string name="tunnel_lan">LAN only</string>
+    <string name="tunnel_lan_d">Same Wi-Fi only. Traffic is encrypted with a self-signed certificate: your client must pin the SHA-256 fingerprint shown after setup. Cloud-hosted clients cannot reach this.</string>
+    <string name="named_token">Tunnel token</string>
+    <string name="named_host">Public hostname</string>
+    <string name="named_help">In the Cloudflare dashboard, point the hostname at http://localhost:8000 (your local port).</string>
+    <string name="token_saved_hint">A token is saved. Leave empty to keep it.</string>
+    <string name="start_and_get">Start and get URL</string>
+
+    <!-- done -->
+    <string name="done_title">Connected</string>
+    <string name="done_title_starting">Starting…</string>
+    <string name="done_title_stopped">Not started</string>
+    <string name="done_sub">Add the URL to your MCP config and you are done.</string>
+    <string name="done_sub_starting">Checking permissions and opening the tunnel. This can take up to 40 seconds.</string>
+    <string name="done_not_started">The server is not running.</string>
+    <string name="connector_url">Connector URL</string>
+    <string name="copy_url">Copy URL</string>
+    <string name="url_copied">URL copied</string>
+    <string name="other_device">Paste on another device</string>
+    <string name="qr_help">Scan the QR code to send the URL to your computer.</string>
+    <string name="qr_hidden">Tap Show to reveal the URL and its QR code.</string>
+    <string name="cd_qr">QR code of the connector URL</string>
+    <string name="mcp_config_steps">MCP config: add a remote (streamable HTTP) server and use the URL above.</string>
+    <string name="go_home">Open home</string>
+
+    <!-- home -->
+    <string name="nav_home">Home</string>
+    <string name="nav_activity">Activity</string>
+    <string name="nav_settings">Settings</string>
+    <string name="status_running">Running</string>
+    <string name="status_stopped">Stopped</string>
+    <string name="status_starting">Starting…</string>
+    <string name="status_error">Could not start</string>
+    <string name="stop">Stop</string>
+    <string name="start">Start</string>
+    <string name="run_summary">Up %1$s · %2$d calls this session</string>
+    <string name="duration_min">%d min</string>
+    <string name="duration_hr_min">%1$d h %2$d min</string>
+    <string name="url_waiting">Waiting for the tunnel…</string>
+    <string name="cd_copy_url">Copy URL</string>
+    <string name="cd_show_url">Show URL</string>
+    <string name="cd_hide_url">Hide URL</string>
+    <string name="health_permission">Permission</string>
+    <string name="health_server">MCP server</string>
+    <string name="health_tunnel">Tunnel</string>
+    <string name="health_wake">Wake lock</string>
+    <string name="health_battery">Battery optimization</string>
+    <string name="needs_attention">needs attention</string>
+    <string name="wake_held">Held</string>
+    <string name="wake_not_held">Not held</string>
+    <string name="battery_ok">Unrestricted</string>
+    <string name="tunnel_off">Off</string>
+    <string name="tunnel_starting">Connecting…</string>
+    <string name="tunnel_up">Up</string>
+    <string name="tunnel_restarting">Reconnecting…</string>
+    <string name="tunnel_error">Error</string>
+    <string name="retry_tunnel">Retry tunnel</string>
+    <string name="recent_activity">Recent activity</string>
+    <string name="view_all">View all</string>
+    <string name="no_activity">Nothing yet. Calls from your MCP client will show up here.</string>
+    <string name="url_changed_banner">The connector URL changed. Update it in your MCP config.</string>
+    <string name="notif_off_banner">Notifications are off, so approval requests cannot alert you.</string>
+    <string name="banner_hint">The server will not start until this is fixed.</string>
+    <string name="battery_dialog_title">Keep running in the background</string>
+    <string name="battery_dialog_text">Allow Phone MCP to ignore battery optimization so the system does not stop it while the screen is off.</string>
+    <string name="battery_dialog_ok">Allow</string>
+    <string name="basic_storage_banner">Basic mode needs All files access for the file tools. Only device info works until you allow it.</string>
+
+    <string name="probe_su_missing">No root found</string>
+    <string name="probe_root_denied">Root permission was denied</string>
+    <string name="probe_not_root">su is not running as root</string>
+    <string name="probe_shiz_missing">Shizuku is not installed</string>
+    <string name="probe_shiz_not_running">Shizuku is not running</string>
+    <string name="probe_shiz_old">Shizuku is too old</string>
+    <string name="probe_shiz_no_perm">Shizuku permission needed</string>
+    <string name="probe_test_failed">Permission test failed</string>
+    <string name="probe_no_storage">All files access is not granted</string>
+
+    <string name="err_port">That port is already in use. Pick another one in Settings.</string>
+    <string name="err_no_mode">No permission mode is chosen.</string>
+    <string name="err_internal">Something went wrong: %s</string>
+    <string name="terr_no_binary">The tunnel program is missing from this build.</string>
+    <string name="terr_timeout">The tunnel did not come up in time. Check your internet connection.</string>
+    <string name="terr_no_token">Add your Cloudflare tunnel token in Settings.</string>
+    <string name="terr_no_host">Add your public hostname in Settings.</string>
+    <string name="terr_no_network">No suitable network address found. Is Wi-Fi or Tailscale on?</string>
+    <string name="terr_process">The tunnel stopped unexpectedly.</string>
+
+    <!-- activity -->
+    <string name="activity_title">Activity</string>
+    <string name="export">Export</string>
+    <string name="clear">Clear</string>
+    <string name="clear_confirm">Delete the whole activity log?</string>
+    <string name="dec_denied">Denied</string>
+    <string name="dec_blocked">Blocked</string>
+    <string name="dec_timeout">Timed out</string>
+    <string name="dec_failed">Failed</string>
+    <string name="time_now">just now</string>
+    <string name="time_min">%d min</string>
+    <string name="time_hr">%d h</string>
+    <string name="time_day">%d d</string>
+
+    <!-- settings -->
+    <string name="settings_title">Settings</string>
+    <string name="sec_connection">CONNECTION</string>
+    <string name="set_tunnel">Tunnel</string>
+    <string name="set_port">Local port</string>
+    <string name="port_hint">1024 to 65535</string>
+    <string name="set_autostop">Auto-stop</string>
+    <string name="autostop_after">After %s</string>
+    <string name="dur_minutes">%d minutes</string>
+    <string name="dur_hours">%d hours</string>
+    <string name="days">%d days</string>
+    <string name="set_restart_note">Connection changes apply the next time you start.</string>
+    <string name="sec_security">SECURITY</string>
+    <string name="set_biometric">Require biometrics to start</string>
+    <string name="set_approval">Confirm dangerous actions on the phone</string>
+    <string name="approval_off_note">When off, anything that is not read-only is blocked outright.</string>
+    <string name="set_full_access">Full access mode</string>
+    <string name="full_access_note">Turns off tool toggles, read-only mode, path rules and ordinary approvals</string>
+    <string name="full_access_overrides">Not used while Full access is on</string>
+    <string name="full_access_title">Turn on Full access?</string>
+    <string name="full_access_text">The AI will be able to run any command and read or write any file, with no path rules, tool toggles or read-only mode, and no prompt for ordinary dangerous commands. Only a short list of critical commands (flashing or erasing partitions, raw disk writes, wiping system paths, IMEI and modem data) still asks you twice on the phone.</string>
+    <string name="full_access_confirm">Turn on</string>
+    <string name="full_access_banner">Full access is on. Only critical commands still ask for confirmation.</string>
+    <string name="set_readonly">Read-only mode</string>
+    <string name="set_rotate">Rotate secret</string>
+    <string name="rotate_note">Old URL stops working immediately</string>
+    <string name="rotate_title">Rotate the secret?</string>
+    <string name="rotate_text">The old connector URL stops working at once and the server restarts. You will need to update your MCP config with the new URL.</string>
+    <string name="rotate_confirm">Rotate</string>
+    <string name="sec_keep">KEEP RUNNING</string>
+    <string name="set_wake">Wake lock</string>
+    <string name="wake_note">Keeps the CPU running with the screen off</string>
+    <string name="set_wifi">Wi-Fi lock</string>
+    <string name="wifi_note">Keeps Wi-Fi out of power saving</string>
+    <string name="set_wake_max">Wake lock max duration</string>
+    <string name="wake_max_same">Same as auto-stop</string>
+    <string name="set_boot">Start on boot</string>
+    <string name="set_battery">Battery optimization whitelist</string>
+    <string name="battery_not_note">Not added yet. The system may stop the app in the background.</string>
+    <string name="battery_added">Added</string>
+    <string name="set_vendor">Vendor auto-start settings</string>
+    <string name="vendor_manual">Open your phone\'s battery or app-launch settings, find Phone MCP and allow auto-start and background activity.</string>
+    <string name="vendor_open">Open settings</string>
+    <string name="keep_footer">The wake lock and Wi-Fi lock are acquired and released together. You can also release them from the notification.</string>
+    <string name="sec_tools">TOOLS OPEN TO THE AI</string>
+    <string name="tool_footer">The tool list adapts to the current permission mode.</string>
+    <string name="tool_sensitive_note">Sensitive, off by default</string>
+    <string name="tool_unavailable">Not available in this mode</string>
+    <string name="sec_paths">PATH RULES</string>
+    <string name="path_allow">Allowed</string>
+    <string name="path_deny">Denied</string>
+    <string name="path_deny_count">%d folders</string>
+    <string name="path_hint">/sdcard/Download</string>
+    <string name="path_reset">Reset to defaults</string>
+    <string name="path_footer">Reads outside the allowed folders are refused. Writes outside them need approval on the phone. Denied folders are always blocked.</string>
+    <string name="sec_audit">ACTIVITY LOG</string>
+    <string name="set_retention">Keep log for</string>
+    <string name="sec_language">LANGUAGE · 語言</string>
+    <string name="lang_system">Follow system</string>
+    <string name="lang_zh">繁體中文</string>
+    <string name="lang_en">English</string>
+    <string name="sec_mode">PERMISSION MODE</string>
+    <string name="set_switch_mode">Switch mode</string>
+    <string name="set_storage">All files access</string>
+    <string name="set_storage_note">Needed for file tools in Basic mode</string>
+
+    <!-- approval -->
+    <string name="approval_title">An MCP client wants to run a dangerous command</string>
+    <string name="approval_title_plain">An MCP client wants to run a command</string>
+    <string name="risk_unverified">Not on the safe read-only list</string>
+    <string name="risk_protected_path">Touches protected folders</string>
+    <string name="risk_hidden_chars">Contains hidden characters</string>
+    <string name="approval_title_write">An MCP client wants to write outside the allowed folders</string>
+    <string name="approval_title_critical">Critical command: confirm (%1$d of %2$d)</string>
+    <string name="risk_critical">Can brick the phone or erase IMEI data</string>
+    <string name="approval_sub">Nothing happens until you allow it.</string>
+    <string name="approval_command">COMMAND</string>
+    <string name="approval_deny">Deny</string>
+    <string name="approval_allow">Allow once</string>
+    <string name="approval_seconds">Auto-denied in %d s</string>
+    <string name="approval_source">Source: %s</string>
+    <string name="approval_biometric">Allowing needs your fingerprint or screen lock</string>
+    <string name="risk_delete_files">Deletes files</string>
+    <string name="risk_irreversible">Cannot be undone</string>
+    <string name="risk_disk_write">Touches disk partitions</string>
+    <string name="risk_format">Formats storage</string>
+    <string name="risk_reboot">Reboots the phone</string>
+    <string name="risk_bootloader">Bootloader or recovery</string>
+    <string name="risk_selinux">Changes SELinux</string>
+    <string name="risk_uninstall">Removes or disables apps</string>
+    <string name="risk_wipe">Wipes data</string>
+    <string name="risk_remote_exec">Runs piped or evaluated code</string>
+    <string name="risk_system_write">Changes system settings</string>
+    <string name="risk_broad_perms">Changes permissions recursively</string>
+    <string name="risk_outside_path">Outside allowed folders</string>
+    <string name="bio_start_title">Start Phone MCP</string>
+    <string name="bio_start_sub">Confirm it is you</string>
+    <string name="bio_allow_title">Allow this action</string>
+    <string name="bio_allow_sub">Confirm it is you to allow it once</string>
+
+    <!-- notifications -->
+    <string name="ch_service">Server running</string>
+    <string name="ch_service_held">Server running (wake lock held)</string>
+    <string name="ch_approval">Approval requests</string>
+    <string name="ch_alert">Alerts</string>
+    <string name="notif_starting">Starting…</string>
+    <string name="notif_running">Server running</string>
+    <string name="notif_running_held">Server running · wake lock held</string>
+    <string name="notif_acquire_lock">Acquire wake lock</string>
+    <string name="notif_release_lock">Release wake lock</string>
+    <string name="notif_stop">Stop</string>
+    <string name="alert_url_changed_title">Connector URL changed</string>
+    <string name="alert_url_changed_text">The tunnel restarted with a new address. Update your MCP config.</string>
+    <string name="alert_autostop_title">Phone MCP stopped</string>
+    <string name="alert_autostop_text">The auto-stop timer ran out, so the server and tunnel were stopped.</string>
+    <string name="alert_boot_title">Phone MCP is not running</string>
+    <string name="alert_boot_text">Open the app to start the server. Biometrics are required.</string>
+    <string name="copy_mcp_config">Copy MCP config</string>
+    <string name="tls_pin">Self-signed certificate. Pin SHA-256:
+%1$s</string>
+</resources>
