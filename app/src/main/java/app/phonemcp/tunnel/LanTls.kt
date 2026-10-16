@@ -16,7 +16,7 @@ import javax.security.auth.x500.X500Principal
  * certificate), so the private key never leaves secure storage. Clients must PIN [fingerprint] instead of trusting a CA.
  */
 object LanTls {
-    private const val ALIAS = "phonemcp_lan_tls"
+    private const val ALIAS = "phonemcp_lan_tls2" // v2: key also allows DIGEST_NONE, which Conscrypt needs to sign in TLS
 
     private fun ks(): KeyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
 
@@ -28,7 +28,7 @@ object LanTls {
             gen.initialize(
                 KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_SIGN)
                     .setAlgorithmParameterSpec(java.security.spec.ECGenParameterSpec("secp256r1"))
-                    .setDigests(KeyProperties.DIGEST_SHA256)
+                    .setDigests(KeyProperties.DIGEST_NONE, KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA384)
                     .setCertificateSubject(X500Principal("CN=Phone MCP LAN"))
                     .build()
             )
