@@ -98,7 +98,7 @@
     <string name="tunnel_lan_d">僅限同一個 Wi-Fi，流量以自簽憑證加密，用戶端需固定設定完成後顯示的 SHA-256 指紋。雲端用戶端連不到這個。</string>
     <string name="named_token">隧道 token</string>
     <string name="named_host">公開網域</string>
-    <string name="named_help">在 Cloudflare 後台把網域指到 http://localhost:8000（你的本機埠）。</string>
+    <string name="named_help">在 Cloudflare 後台把網域指到 http://localhost:%1$d（你的本機埠）。</string>
     <string name="token_saved_hint">已儲存 token。留空表示不更改。</string>
     <string name="start_and_get">啟動並取得網址</string>
 
@@ -291,6 +291,8 @@
     <string name="bio_start_sub">請確認是你本人</string>
     <string name="bio_allow_title">允許這個操作</string>
     <string name="bio_allow_sub">請確認是你本人，才能允許一次</string>
+    <string name="bio_settings_title">變更安全設定</string>
+    <string name="bio_settings_sub">請確認是你本人，才能給 AI 更多權限</string>
 
     <!-- notifications -->
     <string name="ch_service">伺服器運行中</string>
@@ -305,6 +307,8 @@
     <string name="notif_stop">停止</string>
     <string name="alert_url_changed_title">Connector 網址已變更</string>
     <string name="alert_url_changed_text">隧道重新啟動後網址已改變，請到 MCP 設定更新。</string>
+    <string name="alert_secret_reset_title">連線密鑰已重設</string>
+    <string name="alert_secret_reset_text">已儲存的密鑰無法再讀取（例如更改螢幕鎖之後），所以產生了新的密鑰。舊的 Connector 網址已失效，請到 MCP 設定更新。</string>
     <string name="alert_autostop_title">Phone MCP 已停止</string>
     <string name="alert_autostop_text">自動停止時間到，伺服器與隧道已關閉。</string>
     <string name="alert_boot_title">Phone MCP 尚未啟動</string>

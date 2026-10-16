@@ -85,6 +85,16 @@ fun SettingsScreen(vm: AppViewModel) {
     val storageOk = remember(vm.resumeTick) { BasicExecutor.hasStorageAccess() }
     val caps = capabilitiesFor(s.mode, storageOk)
 
+    // Anything that gives the AI more access needs the same proof as starting the server.
+    fun withOwnerProof(action: () -> Unit) {
+        val act = ctx as? androidx.fragment.app.FragmentActivity
+        if (act != null && Biometrics.available(ctx)) {
+            Biometrics.prompt(act, ctx.getString(R.string.bio_settings_title), ctx.getString(R.string.bio_settings_sub)) { ok ->
+                if (ok) action()
+            }
+        } else action()
+    }
+
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -124,7 +134,8 @@ fun SettingsScreen(vm: AppViewModel) {
                 noteColor = C.WarnSoft, enabled = !s.fullAccess
             )
             SwitchRow(
-                stringResource(R.string.set_readonly), s.readOnly && !s.fullAccess, { v -> vm.update { it.copy(readOnly = v) } },
+                stringResource(R.string.set_readonly), s.readOnly && !s.fullAccess,
+                { v -> if (v) vm.update { it.copy(readOnly = true) } else withOwnerProof { vm.update { it.copy(readOnly = false) } } },
                 enabled = !s.fullAccess
             )
             NavRow(stringResource(R.string.set_rotate), stringResource(R.string.rotate_note), { dlg = Dlg.Rotate }, divider = false)
@@ -183,7 +194,10 @@ fun SettingsScreen(vm: AppViewModel) {
                 }
                 SwitchRow(
                     def.name, available && ToolCatalog.isEnabled(def, s),
-                    { v -> vm.update { it.copy(toolOverrides = it.toolOverrides + (def.name to v)) } },
+                    { v ->
+                        val change = { vm.update { it.copy(toolOverrides = it.toolOverrides + (def.name to v)) } }
+                        if (v) withOwnerProof(change) else change()
+                    },
                     note = note, noteColor = if (available) C.WarnSoft else C.Muted,
                     enabled = available && !s.fullAccess, mono = true, divider = i < list.lastIndex
                 )
@@ -252,7 +266,7 @@ fun SettingsScreen(vm: AppViewModel) {
             title = { Text(stringResource(R.string.full_access_title)) },
             text = { Text(stringResource(R.string.full_access_text), color = C.Soft) },
             confirmButton = {
-                TextButton({ dlg = null; vm.update { it.copy(fullAccess = true) } }) {
+                TextButton({ dlg = null; withOwnerProof { vm.update { it.copy(fullAccess = true) } } }) {
                     Text(stringResource(R.string.full_access_confirm), color = C.Danger)
                 }
             },
@@ -281,7 +295,7 @@ fun SettingsScreen(vm: AppViewModel) {
             },
             dismissButton = { TextButton({ dlg = null }) { Text(stringResource(R.string.close), color = C.Muted) } }
         )
-        is Dlg.Paths -> PathsDialog(d.deny, s, vm) { dlg = null }
+        is Dlg.Paths -> PathsDialog(d.deny, s, vm, ::withOwnerProof) { dlg = null }
     }
 }
 
@@ -396,7 +410,7 @@ private fun TunnelDialog(vm: AppViewModel, s: AppSettings, onDismiss: () -> Unit
                         label = { Text(stringResource(R.string.named_host)) },
                         colors = fieldColors(), modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                     )
-                    Text(stringResource(R.string.named_help), fontSize = 12.sp, lineHeight = 18.sp, color = C.Muted, modifier = Modifier.padding(top = 8.dp))
+                    Text(stringResource(R.string.named_help, s.port), fontSize = 12.sp, lineHeight = 18.sp, color = C.Muted, modifier = Modifier.padding(top = 8.dp))
                 }
             }
         },
@@ -412,11 +426,14 @@ private fun TunnelDialog(vm: AppViewModel, s: AppSettings, onDismiss: () -> Unit
 }
 
 @Composable
-private fun PathsDialog(deny: Boolean, s: AppSettings, vm: AppViewModel, onDismiss: () -> Unit) {
+private fun PathsDialog(deny: Boolean, s: AppSettings, vm: AppViewModel, withOwnerProof: (() -> Unit) -> Unit, onDismiss: () -> Unit) {
     val list = if (deny) s.denyPaths else s.allowPaths
     var input by remember { mutableStateOf("") }
     val normalized = remember(input) { if (input.isBlank()) null else runCatching { PathPolicy.normalize(input.trim(), "/sdcard") }.getOrNull() }
-    fun save(next: List<String>) = vm.update { if (deny) it.copy(denyPaths = next) else it.copy(allowPaths = next) }
+    fun save(next: List<String>, widens: Boolean) {
+        val change = { vm.update { if (deny) it.copy(denyPaths = next) else it.copy(allowPaths = next) } }
+        if (widens) withOwnerProof(change) else change()
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = C.Surface,
@@ -426,7 +443,7 @@ private fun PathsDialog(deny: Boolean, s: AppSettings, vm: AppViewModel, onDismi
                 list.forEach { p ->
                     Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(p, fontFamily = Mono, fontSize = 13.sp, color = if (deny) C.Danger else C.Accent, modifier = Modifier.weight(1f))
-                        TextButton({ save(list - p) }) { Text(stringResource(R.string.remove), color = C.Muted) }
+                        TextButton({ save(list - p, widens = deny) }) { Text(stringResource(R.string.remove), color = C.Muted) }
                     }
                 }
                 OutlinedTextField(
@@ -435,10 +452,10 @@ private fun PathsDialog(deny: Boolean, s: AppSettings, vm: AppViewModel, onDismi
                     colors = fieldColors(), modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 )
                 TextButton(
-                    { normalized?.let { n -> if (n !in list) save(list + n); input = "" } },
+                    { normalized?.let { n -> if (n !in list) save(list + n, widens = !deny); input = "" } },
                     enabled = normalized != null && normalized != "/"
                 ) { Text(stringResource(R.string.add), color = C.Accent) }
-                TextButton({ save(if (deny) PathPolicy.DEFAULT_DENY else PathPolicy.DEFAULT_ALLOW) }) {
+                TextButton({ save(if (deny) PathPolicy.DEFAULT_DENY else PathPolicy.DEFAULT_ALLOW, widens = true) }) {
                     Text(stringResource(R.string.path_reset), color = C.Muted)
                 }
             }
