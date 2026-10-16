@@ -17,6 +17,8 @@ concurrency:
 env:
   # SHA-256 of the release signing certificate, as published in the README.
   CERT_SHA256: 577048407bb56cc11030f82661f9c036d366d64572fb8ccbdc527c8716ab2625
+  # SHA-256 of the keystore file itself, so a wrong KEYSTORE_BASE64 is caught before the build.
+  KEYSTORE_SHA256: 1cc2bee5381cbec96dc58a7d6ef09fd817f867181e5c796c4c977d6044c8f8fc
 
 jobs:
   release:
@@ -54,23 +56,63 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Restore signing key
+      - name: Restore and check signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          if [ -z "$KEYSTORE_BASE64" ]; then
-            echo "::error::Secret KEYSTORE_BASE64 is not set; refusing to publish a debug-signed release"
+          # Pasted secrets often pick up a trailing newline or spaces; strip them, then check each value on its own
+          # so a failure names the secret that is wrong. Nothing secret is printed.
+          trim() { printf '%s' "$1" | tr -d '\r\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'; }
+          for name in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Secret $name is not set; refusing to publish a debug-signed release"
+              exit 1
+            fi
+          done
+          store_pw=$(trim "$KEYSTORE_PASSWORD")
+          key_pw=$(trim "$KEY_PASSWORD")
+          alias=$(trim "$KEY_ALIAS")
+          echo "::add-mask::$store_pw"
+          echo "::add-mask::$key_pw"
+          [ "$store_pw" = "$KEYSTORE_PASSWORD" ] || echo "::warning::KEYSTORE_PASSWORD had surrounding whitespace; it was trimmed"
+          [ "$key_pw" = "$KEY_PASSWORD" ] || echo "::warning::KEY_PASSWORD had surrounding whitespace; it was trimmed"
+
+          dir="$RUNNER_TEMP/keystore"
+          mkdir -p "$dir"
+          if ! printf '%s' "$KEYSTORE_BASE64" | tr -d ' \r\n' | base64 --decode > "$dir/release.jks" 2>/dev/null; then
+            echo "::error::KEYSTORE_BASE64 is not valid base64"
             exit 1
           fi
-          mkdir -p "$RUNNER_TEMP/keystore"
-          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/keystore/release.jks"
-          echo "PHONEMCP_STORE_FILE=$RUNNER_TEMP/keystore/release.jks" >> "$GITHUB_ENV"
+          actual=$(sha256sum "$dir/release.jks" | cut -d' ' -f1)
+          if [ "$actual" != "$KEYSTORE_SHA256" ]; then
+            echo "::error::KEYSTORE_BASE64 does not decode to the release keystore (file SHA-256 $actual, expected $KEYSTORE_SHA256)"
+            exit 1
+          fi
+          export STORE_PW="$store_pw"
+          if ! keytool -list -keystore "$dir/release.jks" -storetype PKCS12 -storepass:env STORE_PW >/dev/null 2>&1; then
+            echo "::error::KEYSTORE_PASSWORD does not open the keystore (it is ${#store_pw} characters after trimming; the right one is 32)"
+            exit 1
+          fi
+          if ! keytool -list -keystore "$dir/release.jks" -storetype PKCS12 -storepass:env STORE_PW -alias "$alias" >/dev/null 2>&1; then
+            echo "::error::KEY_ALIAS \"$alias\" is not in the keystore (expected phonemcp-release)"
+            exit 1
+          fi
+          if [ "$key_pw" != "$store_pw" ]; then
+            echo "::error::KEY_PASSWORD differs from KEYSTORE_PASSWORD; for this PKCS12 keystore they are the same value"
+            exit 1
+          fi
+          {
+            echo "PHONEMCP_STORE_FILE=$dir/release.jks"
+            echo "PHONEMCP_STORE_PASSWORD=$store_pw"
+            echo "PHONEMCP_KEY_ALIAS=$alias"
+            echo "PHONEMCP_KEY_PASSWORD=$key_pw"
+          } >> "$GITHUB_ENV"
+          echo "Signing secrets OK"
 
       - name: Unit tests and release build
-        env:
-          PHONEMCP_STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          PHONEMCP_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          PHONEMCP_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleRelease
 
       - name: Verify signature
