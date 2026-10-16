@@ -44,6 +44,16 @@ class MainActivity : AppCompatActivity() {
         setContent { McpTheme { Root() } }
     }
 
+    override fun onStart() {
+        super.onStart()
+        app.uiVisible = true
+    }
+
+    override fun onStop() {
+        app.uiVisible = false
+        super.onStop()
+    }
+
     override fun onResume() {
         super.onResume()
         vm.resumeTick++

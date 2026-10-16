@@ -301,6 +301,8 @@
     <string name="bio_start_sub">Confirm it is you</string>
     <string name="bio_allow_title">Allow this action</string>
     <string name="bio_allow_sub">Confirm it is you to allow it once</string>
+    <string name="bio_settings_title">Change security settings</string>
+    <string name="bio_settings_sub">Confirm it is you to give the AI more access</string>
 
     <!-- notifications -->
     <string name="ch_service">Server running</string>

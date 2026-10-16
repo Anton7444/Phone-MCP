@@ -34,10 +34,12 @@ The connector URL contains a 256-bit secret and is the only credential. **Treat 
 
 - Dangerous or unrecognised `run_shell` commands, and anything touching protected folders, need on-device approval. Only a strict allow-list of read-only commands runs without asking.
 - Protected folders (`/data/data`, `/data/system`, `/data/adb`, `/system`, ...) are blocked by default.
+- With Quick and Named tunnels, TLS ends at Cloudflare's edge: Cloudflare can see the connector URL (including the secret) and all traffic. Use LAN or Tailscale mode if that matters to you.
 - LAN mode uses TLS with a self-signed certificate. Pin the SHA-256 fingerprint shown after setup.
+- UI control tools cannot tap inside Phone MCP itself, and every setting that gives the AI more access (Full Access, turning off read-only, enabling a tool, widening path rules) needs biometrics or the screen lock when the phone has one.
 - The approval gate is a speed bump, not a sandbox. Keep Full Access off unless you really need it.
 
-See `docs/decisions.md` for design decisions.
+See `docs/decisions.md` for design decisions. To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
 ## Build
 Needs JDK 17 and the Android SDK (set `sdk.dir` in `local.properties`).
@@ -47,9 +49,18 @@ Needs JDK 17 and the Android SDK (set `sdk.dir` in `local.properties`).
 ./gradlew :app:assembleRelease        # app/build/outputs/apk/release/app-release.apk
 ```
 
-Release builds are signed with `keystore/phonemcp.jks`, which is **not** in this repo. Create your own keystore and update `signingConfigs` in `app/build.gradle.kts`.
+Without any signing setup, release builds are signed with the Android debug key (fine for trying it out). To sign with your own key, create `keystore.properties` in the project root (it is git-ignored):
 
-`libcloudflared.so` is the official Cloudflare `cloudflared` linux-arm64 binary.
+```
+storeFile=keystore/release.jks
+storePassword=...
+keyAlias=...
+keyPassword=...
+```
+
+or set `PHONEMCP_STORE_FILE`, `PHONEMCP_STORE_PASSWORD`, `PHONEMCP_KEY_ALIAS` and `PHONEMCP_KEY_PASSWORD`. Never commit a keystore: anyone with it can publish "updates" that install over your users' copies.
+
+`libcloudflared.so` is the unmodified official Cloudflare `cloudflared` linux-arm64 binary (Apache License 2.0). Version, download link and SHA-256 are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); the build fails if the file does not match that hash.
 
 ## Project layout
 `app/src/main/java/app/phonemcp/`
@@ -68,4 +79,4 @@ Release builds are signed with `keystore/phonemcp.jks`, which is **not** in this
 This app gives remote code execution on your phone by design. Use it only on devices you own, and at your own risk.
 
 ## License
-See [LICENSE](LICENSE).
+See [LICENSE](LICENSE). Bundled third-party software is listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
