@@ -24,8 +24,8 @@ android {
         applicationId = "app.phonemcp"
         minSdk = 30
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.1.3"
+        versionCode = 6
+        versionName = "1.2.0"
         // cloudflared is only bundled for arm64 (every current phone).
         ndk { abiFilters += listOf("arm64-v8a") }
     }
