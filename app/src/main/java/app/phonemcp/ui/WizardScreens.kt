@@ -532,7 +532,7 @@ private fun NamedFields(vm: AppViewModel) {
             label = { Text(stringResource(R.string.named_host)) }, singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), colors = fieldColors(), modifier = Modifier.fillMaxWidth()
         )
-        Text(stringResource(R.string.named_help), fontSize = 12.sp, lineHeight = 18.sp, color = C.Muted)
+        Text(stringResource(R.string.named_help, vm.settings.collectAsState().value.port), fontSize = 12.sp, lineHeight = 18.sp, color = C.Muted)
     }
 }
 

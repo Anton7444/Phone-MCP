@@ -10,6 +10,7 @@ import app.phonemcp.BuildConfig
 import app.phonemcp.Capability
 import app.phonemcp.ServerState
 import app.phonemcp.ToolException
+import app.phonemcp.app
 import app.phonemcp.data.AuditLog
 import app.phonemcp.data.Decision
 import app.phonemcp.data.SecretStore
@@ -86,7 +87,7 @@ class ToolRunner(
             if (!ToolCatalog.isEnabled(def, s)) throw ToolException("BLOCKED", "$name is turned off on the phone")
             if (s.readOnly && name in READ_ONLY_BLOCKED) throw ToolException("BLOCKED", "Read-only mode is on")
         }
-        if (name == "ui_tap" || name == "ui_type") requireNoPendingApproval()
+        if (name == "ui_tap" || name == "ui_type") requireInputAllowed()
         return when (name) {
             "run_shell" -> runShell(ex, args, trace)
             "list_dir" -> ToolResult.text(cap(ex.listDir(guard(ex, args.optString("path", "/sdcard"), false, trace))))
@@ -128,7 +129,7 @@ class ToolRunner(
         if (!s.fullAccess && s.readOnly && !CommandClassifier.isReadOnlySafe(cmd)) {
             throw ToolException("BLOCKED", "Read-only mode is on and this command is not on the read-only list")
         }
-        if (INPUT_INJECTION.containsMatchIn(cmd)) requireNoPendingApproval()
+        if (INPUT_INJECTION.containsMatchIn(cmd)) requireInputAllowed()
         val cls = CommandClassifier.classify(cmd)
         val source = "run_shell · ${ex.mode.name.lowercase().replaceFirstChar { it.uppercase() }}"
         val protectedRoots = s.denyPaths.flatMap { PathPolicy.aliases(it) }
@@ -154,10 +155,16 @@ class ToolRunner(
     private fun deviceSecure(): Boolean =
         try { ctx.getSystemService(KeyguardManager::class.java).isDeviceSecure } catch (_: Exception) { false }
 
-    /** While the owner is looking at an approval sheet nothing may synthesise touches, or it could press Allow itself. */
-    private fun requireNoPendingApproval() {
+    /**
+     * Nothing may synthesise touches while an approval sheet is waiting (it could press Allow itself) or while
+     * Phone MCP's own screens are visible (it could switch on Full Access or widen the path rules).
+     */
+    private fun requireInputAllowed() {
         if (approvals.pending.value != null) {
             throw ToolException("BLOCKED", "Input injection is paused while an approval is waiting on the phone")
+        }
+        if (ctx.app.uiVisible) {
+            throw ToolException("BLOCKED", "Input injection is refused while the Phone MCP app is on screen")
         }
     }
 

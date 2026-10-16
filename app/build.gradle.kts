@@ -1,8 +1,20 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
+// Release signing comes from keystore.properties (git-ignored) or PHONEMCP_* environment variables.
+// Without either, release builds use the standard Android debug key so a fresh clone still builds.
+val signingProps = Properties().apply {
+    val f = rootProject.file("keystore.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+fun signingValue(key: String, env: String): String? = signingProps.getProperty(key) ?: System.getenv(env)
+val releaseKeystore: File? = signingValue("storeFile", "PHONEMCP_STORE_FILE")?.let { rootProject.file(it) }?.takeIf { it.exists() }
+if (releaseKeystore == null) logger.warn("Phone MCP: no release keystore configured; release builds are signed with the debug key.")
 
 android {
     namespace = "app.phonemcp"
@@ -19,20 +31,20 @@ android {
     }
 
     signingConfigs {
-        // Sideload-only key checked into the repo folder on purpose (no Play release, see docs/decisions.md).
-        create("sideload") {
-            storeFile = rootProject.file("keystore/phonemcp.jks")
-            storePassword = "phonemcp-sideload"
-            keyAlias = "phonemcp"
-            keyPassword = "phonemcp-sideload"
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = releaseKeystore
+                storePassword = signingValue("storePassword", "PHONEMCP_STORE_PASSWORD")
+                keyAlias = signingValue("keyAlias", "PHONEMCP_KEY_ALIAS")
+                keyPassword = signingValue("keyPassword", "PHONEMCP_KEY_PASSWORD")
+            }
         }
     }
 
     buildTypes {
-        debug { signingConfig = signingConfigs.getByName("sideload") }
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("sideload")
+            signingConfig = signingConfigs.getByName(if (releaseKeystore != null) "release" else "debug")
         }
     }
 
@@ -80,3 +92,24 @@ dependencies {
     testImplementation("org.json:json:20240303")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
 }
+
+// The bundled cloudflared must be the official release documented in THIRD_PARTY_NOTICES.md.
+val CLOUDFLARED_SHA256 = "e6422b9d4f72d3194bc5a38676f13667c06666523217b842a877d72a80b5ac08"
+val verifyCloudflared by tasks.registering {
+    val bin = file("src/main/jniLibs/arm64-v8a/libcloudflared.so")
+    inputs.file(bin)
+    doLast {
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        bin.inputStream().use { input ->
+            val buf = ByteArray(1 shl 16)
+            while (true) {
+                val n = input.read(buf)
+                if (n < 0) break
+                digest.update(buf, 0, n)
+            }
+        }
+        val actual = digest.digest().joinToString("") { "%02x".format(it) }
+        check(actual == CLOUDFLARED_SHA256) { "libcloudflared.so SHA-256 is $actual, expected $CLOUDFLARED_SHA256 (see THIRD_PARTY_NOTICES.md)" }
+    }
+}
+tasks.named("preBuild") { dependsOn(verifyCloudflared) }

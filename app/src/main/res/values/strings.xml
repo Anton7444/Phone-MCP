@@ -104,7 +104,7 @@
     <string name="tunnel_lan_d">Same Wi-Fi only. Traffic is encrypted with a self-signed certificate: your client must pin the SHA-256 fingerprint shown after setup. Cloud-hosted clients cannot reach this.</string>
     <string name="named_token">Tunnel token</string>
     <string name="named_host">Public hostname</string>
-    <string name="named_help">In the Cloudflare dashboard, point the hostname at http://localhost:8000 (your local port).</string>
+    <string name="named_help">In the Cloudflare dashboard, point the hostname at http://localhost:%1$d (your local port).</string>
     <string name="token_saved_hint">A token is saved. Leave empty to keep it.</string>
     <string name="start_and_get">Start and get URL</string>
 
@@ -301,6 +301,8 @@
     <string name="bio_start_sub">Confirm it is you</string>
     <string name="bio_allow_title">Allow this action</string>
     <string name="bio_allow_sub">Confirm it is you to allow it once</string>
+    <string name="bio_settings_title">Change security settings</string>
+    <string name="bio_settings_sub">Confirm it is you to give the AI more access</string>
 
     <!-- notifications -->
     <string name="ch_service">Server running</string>
@@ -315,6 +317,8 @@
     <string name="notif_stop">Stop</string>
     <string name="alert_url_changed_title">Connector URL changed</string>
     <string name="alert_url_changed_text">The tunnel restarted with a new address. Update your MCP config.</string>
+    <string name="alert_secret_reset_title">Connector secret was reset</string>
+    <string name="alert_secret_reset_text">The saved secret could no longer be read (for example after a lock screen change), so a new one was made. The old connector URL no longer works. Update your MCP config.</string>
     <string name="alert_autostop_title">Phone MCP stopped</string>
     <string name="alert_autostop_text">The auto-stop timer ran out, so the server and tunnel were stopped.</string>
     <string name="alert_boot_title">Phone MCP is not running</string>

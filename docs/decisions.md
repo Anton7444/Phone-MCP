@@ -1,10 +1,10 @@
 # Decisions
 
-Non-obvious choices, and the reason for each. Anything that differs from `PHONE_MCP_APP_GUIDE.md` is marked **Differs**.
+Non-obvious choices, and the reason for each. Anything that differs from the original design spec is marked **Differs**.
 
 ## HTTP + MCP
 - **Differs: hand-written HTTP server and JSON-RPC layer instead of Ktor + the MCP Kotlin SDK.**
-  The guide itself warns the SDK has had breaking changes between releases, and a stateless "POST one endpoint,
+  The SDK has had breaking changes between releases, and a stateless "POST one endpoint,
   return JSON" server needs about 250 lines. That removes two fast-moving dependencies and a large amount of
   reflection/serialization code that I could not run on a device in this environment. The wire behaviour follows
   the MCP Streamable HTTP spec (stateless, JSON responses, `202` for notifications, `405` for `GET`/`DELETE`,
@@ -17,7 +17,8 @@ Non-obvious choices, and the reason for each. Anything that differs from `PHONE_
 - **Differs: `SharedPreferences` (settings) and plain `SQLiteOpenHelper` (audit log) instead of DataStore and Room.**
   Room needs an annotation processor (KSP) and DataStore adds coroutine plumbing for a few dozen values. Same behaviour, less to break.
 - **Differs: AES-GCM with an Android Keystore key written directly** instead of `EncryptedSharedPreferences` (deprecated).
-  If the Keystore is unusable on a device the value falls back to app-private storage rather than crashing.
+  Fail closed: if the Keystore is unusable the secret is never written to disk in plaintext. If a stored value can no longer be
+  decrypted (for example the Keystore key was lost), a new secret is generated and the old connector URL stops working.
 - **Differs: no libsu.** Root uses `su -c` through `ProcessBuilder`. One process per call, wrapped in `timeout -k 2 N sh -c ...` when toybox `timeout` exists so child processes die with the call.
 
 ## Privilege backends
@@ -34,7 +35,7 @@ Non-obvious choices, and the reason for each. Anything that differs from `PHONE_
 - The battery-optimisation prompt is shown from the UI (a service cannot reliably start an activity), once per app run, after Start.
 
 ## Tunnel (cloudflared)
-- `cloudflared` linux-arm64 (official release, SHA-256 checked against Cloudflare's published digest) ships as `lib/arm64-v8a/libcloudflared.so`. `extractNativeLibs=true` and `useLegacyPackaging=true` make it a real file in `nativeLibraryDir`, which is the one app location Android still lets us execute from.
+- `cloudflared` linux-arm64 (official release, version and SHA-256 in `THIRD_PARTY_NOTICES.md`; the build fails if the hash differs) ships as `lib/arm64-v8a/libcloudflared.so`. `extractNativeLibs=true` and `useLegacyPackaging=true` make it a real file in `nativeLibraryDir`, which is the one app location Android still lets us execute from.
 - **DNS workaround.** Android has no `/etc/resolv.conf`, so Go's resolver cannot look anything up. For Quick Tunnels the app:
   1. calls `https://api.trycloudflare.com/tunnel` from Java (Android's resolver) to get tunnel credentials,
   2. writes a credentials file and a one-rule config,
@@ -42,21 +43,21 @@ Non-obvious choices, and the reason for each. Anything that differs from `PHONE_
   If that does not register within 25 s it falls back to plain `cloudflared tunnel --url ...` and parses the `*.trycloudflare.com` URL. `SSL_CERT_DIR=/system/etc/security/cacerts` supplies trusted roots.
 - Named tunnels pass the token through the `TUNNEL_TOKEN` environment variable so it does not appear in the process list.
 - Watchdog: the supervisor restarts the process with back-off (2 s doubling to 30 s); a default-network change restarts it after a 3 s debounce. A new Quick Tunnel URL raises a "URL changed" notification and a banner.
-- **Not verified on a device in this build environment.** The API response shape was confirmed against the live endpoint and the edge IPs against live DNS, but running the binary needs an arm64 Android phone. See "First run checklist" in the README.
+- With Quick and Named tunnels, TLS ends at Cloudflare's edge, so Cloudflare can see the connector URL (including the secret) and the traffic. Use LAN or Tailscale mode if that is not acceptable.
 
 ## Safety
 - The command classifier is a speed bump and the UI never calls it a sandbox. The path policy is checked on both the lexical path and the `readlink -f` result, and an allowed path needs *every* form to be inside an allowed root.
 - With on-device approval switched off, dangerous actions are **blocked**, not allowed. That is safer than silently running them.
-- Approval requires biometrics or the screen lock when the phone has one. If the phone has no lock screen at all, tapping Allow is enough (otherwise nobody could ever allow anything).
+- Approval requires biometrics or the screen lock. If the phone has no lock screen at all, approvals are refused (see the 1.1.1 follow-up below).
 - The audit log stores redacted args (file bodies and typed text reduce to their length) and never the secret.
 
 ## UI
 - Dark theme only. Fonts are the system sans/mono: bundling DM Sans, Noto Sans TC and JetBrains Mono would add several MB, and the app must not need network at runtime.
 - Icons are the design's own SVG path data drawn on a Compose canvas, so there is no icon-library dependency.
-- Strings: English default, Traditional Chinese in `values-zh-rTW` (glossary from the guide). Language switching uses `AppCompatDelegate.setApplicationLocales` (which uses `LocaleManager` on Android 13+) and `android:localeConfig`; notifications use a locale-wrapped context so they follow the chosen language on Android 11-12 as well.
+- Strings: English default, Traditional Chinese in `values-zh-rTW`. Language switching uses `AppCompatDelegate.setApplicationLocales` (which uses `LocaleManager` on Android 13+) and `android:localeConfig`; notifications use a locale-wrapped context so they follow the chosen language on Android 11-12 as well.
 
 ## Not included
-Quick Settings tile, home widget and settings import/export (guide milestone M4 extras). Everything in M0-M3, plus Named Tunnel, Tailscale, LAN, and the screenshot / logcat / UI / notification / SMS tools, is in.
+Quick Settings tile, home widget and settings import/export. Everything else in the original spec, plus Named Tunnel, Tailscale, LAN, and the screenshot / logcat / UI / notification / SMS tools, is in.
 
 ## Security review follow-up (1.1.1)
 Each finding was reproduced first (the classifier bypasses, the `env`/`ip netns` read-only escapes and the critical-list gaps were confirmed with tests on the old code), then fixed; the cases live in `SecurityRegressionTest`.
@@ -66,6 +67,12 @@ Each finding was reproduced first (the classifier bypasses, the `env`/`ip netns`
 - **Approval sheet shows the whole command** (scrollable). Invisible/bidi characters are shown as `⟦U+202E⟧`, long whitespace runs collapse to `⋯`, and a "hidden characters" chip is added. The notification uses the same text.
 - **No screen lock = approvals are refused** (fail closed). While an approval is on screen, `ui_tap`, `ui_type` and shell commands that inject input (`input`, `uiautomator`, `sendevent`, `monkey`) are refused, so the AI cannot press Allow itself.
 - **Critical list widened**: any rm flag spelling on root/system paths including `/*`, any raw write to `/dev/block`, `mmcblk`, `by-name`, `blkdiscard`, `flash_erase`, `wipefs`, `mke2fs`, fastboot with `-s SERIAL`.
-- **Tailscale mode listens only on the Tailscale address** (restarts if that address changes). LAN mode still listens on all interfaces and says the traffic is unencrypted.
+- **Tailscale mode listens only on the Tailscale address** (restarts if that address changes). LAN mode listens only on the Wi-Fi/LAN address and uses TLS with a self-signed certificate whose key lives in the Android Keystore; clients pin its SHA-256 fingerprint.
 - **HTTP**: the secret path is checked before any request body is read; at most 64 simultaneous connections; screenshot / UI-dump temp files get random names.
-- Not changed: the signing key is in the source zip on purpose (sideload build); the biometric prompt is not bound to a Keystore `CryptoObject` (defence in depth against a rooted attacker hooking the app).
+- Not changed: the biometric prompt is not bound to a Keystore `CryptoObject` (defence in depth against a rooted attacker hooking the app).
+
+## Public release preparation (1.1.3)
+- **The AI cannot change Phone MCP's own settings.** `ui_tap`, `ui_type` and input-injecting shell commands are refused while the Phone MCP app is on screen, so a client with UI control cannot open Settings and switch on Full Access. As a second layer, every setting that widens access (Full Access on, read-only off, a tool switched on, allow-list additions, deny-list removals, path list resets) asks for biometrics or the screen lock when the phone has one.
+- **New release signing key.** The old sideload key may have been shared along with the source, so public releases use a new key whose certificate fingerprint is in the README. Older installs must be uninstalled once.
+- **Signing key is not in the repository.** Release signing reads `keystore.properties` or `PHONEMCP_*` environment variables (see README); without them release builds use the debug key, so a fresh clone builds.
+- **Smaller fixes.** The read-only allow-list only accepts an exact `>/dev/null` or `>&N` redirect (`>/dev/nullx` used to count). Biometric checks need a Class 3 (strong) biometric or the screen lock; Class 2 face unlock no longer counts. The connector secret is decrypted once and kept in memory; if a saved secret can no longer be read, the new one is announced with a notification and the "URL changed" banner instead of silently breaking the connector URL.
