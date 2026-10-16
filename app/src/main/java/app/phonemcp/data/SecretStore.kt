@@ -15,19 +15,35 @@ import javax.crypto.spec.GCMParameterSpec
  * Holds the connector secret and the Cloudflare named-tunnel token.
  * Values are AES-GCM encrypted with an Android Keystore key (never leaves secure hardware where available).
  */
-class SecretStore(context: Context) {
+class SecretStore(
+    context: Context,
+    /** Called when a saved secret could not be read and had to be replaced: the owner's connector URL just died. */
+    private val onSecretReset: () -> Unit = {}
+) {
     private val prefs = context.getSharedPreferences("secrets", Context.MODE_PRIVATE)
+
+    /** Decrypted once, then served from memory: every HTTP request needs it, and each Keystore call can fail. */
+    @Volatile private var cached: String? = null
 
     @Synchronized
     fun mcpSecret(): String {
-        read(KEY_SECRET)?.let { if (it.length >= 32) return it }
-        return rotate()
+        cached?.let { return it }
+        val existed = prefs.contains(KEY_SECRET)
+        val stored = read(KEY_SECRET) ?: if (existed) { Thread.sleep(100); read(KEY_SECRET) } else null // one retry for a Keystore hiccup
+        if (stored != null && stored.length >= 32) {
+            cached = stored
+            return stored
+        }
+        val fresh = rotate()
+        if (existed) onSecretReset()
+        return fresh
     }
 
     @Synchronized
     fun rotate(): String {
         val s = generate()
         write(KEY_SECRET, s)
+        cached = s
         return s
     }
 

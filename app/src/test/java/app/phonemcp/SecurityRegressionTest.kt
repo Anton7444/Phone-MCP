@@ -34,6 +34,13 @@ class SecurityRegressionTest {
             .forEach { assertFalse("should not ask: $it", asks(it)) }
     }
 
+    @Test fun onlyExactRedirectsToDevNullCountAsReadOnly() {
+        listOf("echo x >/dev/nullfoo", "echo x > /dev/null.sh", "echo x 1>/dev/null2", "echo x >&2foo")
+            .forEach { assertFalse("not read-only: $it", CommandClassifier.isReadOnlySafe(it)) }
+        listOf("ls /sdcard 2>/dev/null", "ls /sdcard >/dev/null 2>&1", "ls /sdcard 2>/dev/null | head", "ls x 2>/dev/null;ls y")
+            .forEach { assertTrue("read-only: $it", CommandClassifier.isReadOnlySafe(it)) }
+    }
+
     @Test fun readOnlyListNoLongerHasEscapeHatches() {
         listOf(
             "env settings put global x 1", "env svc wifi disable", "env cp a b", "env sh -c 'touch x'",

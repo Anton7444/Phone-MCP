@@ -29,9 +29,12 @@ class PhoneMcpApp : Application() {
     override fun onCreate() {
         super.onCreate()
         settings = SettingsRepository(this)
-        secrets = SecretStore(this)
-        audit = AuditLog(this)
         state = ServerState()
+        secrets = SecretStore(this) {
+            state.update { it.copy(urlChanged = true) }
+            Notifs.alert(this, settings.value.language, R.string.alert_secret_reset_title, R.string.alert_secret_reset_text)
+        }
+        audit = AuditLog(this)
         shizuku = ShizukuExecutor(this)
         approvals = ApprovalManager(
             onShown = { Notifs.showApproval(this, settings.value.language, it) },

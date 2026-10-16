@@ -29,6 +29,15 @@ An Android app that turns your phone into an [MCP](https://modelcontextprotocol.
    ```
 5. Allow the battery-optimization prompt. On OnePlus / OPPO / Xiaomi / Huawei / Vivo / Samsung use **Settings → Vendor auto-start settings** so the system does not kill the server when the screen is off.
 
+### Verify the APK
+Official releases are signed with this certificate (SHA-256):
+
+```
+57:70:48:40:7B:B5:6C:C1:10:30:F8:26:61:F9:C0:36:D3:66:D6:45:72:FB:8C:CB:DC:52:7C:87:16:AB:26:25
+```
+
+Check a download with `apksigner verify --print-certs app-release.apk`. If you installed a build from before the public release, it was signed with an older key: uninstall it first.
+
 ## Security model
 The connector URL contains a 256-bit secret and is the only credential. **Treat it like a password**: anyone with it can call the tools, within the limits below.
 
