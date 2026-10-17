@@ -2,8 +2,6 @@
 
 An Android app that turns your phone into an [MCP](https://modelcontextprotocol.io) server. Any MCP client can run shell commands, read and write files, take screenshots and more on your phone, over a private HTTPS tunnel. Dangerous actions stop and wait for your approval on the device.
 
-> Sideload only (not for Google Play). Needs **Android 11+**, **arm64**, and either **root** or **Shizuku**.
-
 ## Features
 - **Three privilege modes:** Root (Magisk / KernelSU), Shizuku, or Basic (app sandbox only).
 - **Tools:** `run_shell`, `list_dir`, `read_file`, `write_file`, `file_info`, `screenshot`, `logcat`, `device_info`, plus optional UI control, notification reading and SMS/contacts (each can be switched off).
