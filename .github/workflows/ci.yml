@@ -27,6 +27,12 @@ jobs:
       - name: Unit tests and debug build
         run: ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleDebug
 
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: phone-mcp-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+
       - name: Upload test reports
         if: failure()
         uses: actions/upload-artifact@v4
