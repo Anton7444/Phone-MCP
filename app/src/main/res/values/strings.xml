@@ -198,6 +198,9 @@
     <string name="dec_timeout">Timed out</string>
     <string name="dec_failed">Failed</string>
     <string name="time_now">just now</string>
+    <string name="detail_command">Command</string>
+    <string name="detail_args">Arguments</string>
+    <string name="detail_result">Result</string>
     <string name="time_min">%d min</string>
     <string name="time_hr">%d h</string>
     <string name="time_day">%d d</string>

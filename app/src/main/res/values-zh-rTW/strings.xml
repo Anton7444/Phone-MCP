@@ -191,6 +191,9 @@
     <string name="dec_timeout">已逾時</string>
     <string name="dec_failed">失敗</string>
     <string name="time_now">剛剛</string>
+    <string name="detail_command">指令</string>
+    <string name="detail_args">參數</string>
+    <string name="detail_result">結果</string>
     <string name="time_min">%d 分鐘</string>
     <string name="time_hr">%d 小時</string>
     <string name="time_day">%d 天</string>

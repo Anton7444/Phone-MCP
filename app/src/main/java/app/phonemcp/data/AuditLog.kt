@@ -19,7 +19,8 @@ data class AuditEntry(
     val tool: String,
     val summary: String,
     val decision: Decision,
-    val status: String
+    val status: String,
+    val args: String = ""
 ) {
     val ok get() = status == "ok"
 }
@@ -60,7 +61,7 @@ class AuditLog(context: Context) : SQLiteOpenHelper(context.applicationContext, 
     @Synchronized
     fun recent(limit: Int): List<AuditEntry> = try {
         readableDatabase.rawQuery(
-            "SELECT id, ts, tool, summary, decision, status FROM audit ORDER BY id DESC LIMIT ?",
+            "SELECT id, ts, tool, summary, decision, status, args FROM audit ORDER BY id DESC LIMIT ?",
             arrayOf(limit.toString())
         ).use { c ->
             buildList {
@@ -68,7 +69,7 @@ class AuditLog(context: Context) : SQLiteOpenHelper(context.applicationContext, 
                     add(
                         AuditEntry(
                             c.getLong(0), c.getLong(1), c.getString(2), c.getString(3),
-                            runCatching { Decision.valueOf(c.getString(4)) }.getOrDefault(Decision.AUTO), c.getString(5)
+                            runCatching { Decision.valueOf(c.getString(4)) }.getOrDefault(Decision.AUTO), c.getString(5), c.getString(6)
                         )
                     )
                 }
