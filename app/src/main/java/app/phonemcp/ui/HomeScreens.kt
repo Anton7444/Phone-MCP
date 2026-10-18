@@ -25,6 +25,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -445,17 +446,18 @@ fun relativeTime(ts: Long, now: Long): String {
 @Composable
 fun ActivityRow(e: AuditEntry, now: Long, divider: Boolean) {
     val bad = e.decision == Decision.DENIED || e.decision == Decision.BLOCKED || e.decision == Decision.TIMEOUT || !e.ok
+    var showDetail by remember { mutableStateOf(false) }
+    val label = when (e.decision) {
+        Decision.DENIED -> stringResource(R.string.dec_denied)
+        Decision.BLOCKED -> stringResource(R.string.dec_blocked)
+        Decision.TIMEOUT -> stringResource(R.string.dec_timeout)
+        else -> if (!e.ok) stringResource(R.string.dec_failed) else e.tool
+    }
     Column {
         Row(
-            Modifier.fillMaxWidth().heightIn(min = 50.dp).padding(vertical = 8.dp),
+            Modifier.fillMaxWidth().clickable { showDetail = true }.heightIn(min = 50.dp).padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            val label = when (e.decision) {
-                Decision.DENIED -> stringResource(R.string.dec_denied)
-                Decision.BLOCKED -> stringResource(R.string.dec_blocked)
-                Decision.TIMEOUT -> stringResource(R.string.dec_timeout)
-                else -> if (!e.ok) stringResource(R.string.dec_failed) else e.tool
-            }
             Text(
                 label, fontFamily = Mono, fontSize = 11.5.sp,
                 color = if (bad) C.Danger else C.Accent,
@@ -470,6 +472,35 @@ fun ActivityRow(e: AuditEntry, now: Long, divider: Boolean) {
             Text(relativeTime(e.ts, now), fontSize = 12.sp, color = C.Muted)
         }
         if (divider) RowDivider()
+    }
+
+    if (showDetail) {
+        AlertDialog(
+            onDismissRequest = { showDetail = false },
+            containerColor = C.Surface,
+            title = { Text(label, fontFamily = Mono, fontSize = 16.sp, color = if (bad) C.Danger else C.Accent) },
+            text = {
+                SelectionContainer {
+                    Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(
+                            "${e.tool} · ${relativeTime(e.ts, now)} · ${e.status}",
+                            fontSize = 12.sp, color = C.Muted
+                        )
+                        DetailBlock(stringResource(R.string.detail_command), e.summary.ifBlank { e.tool })
+                        if (e.args.isNotBlank()) DetailBlock(stringResource(R.string.detail_args), e.args)
+                    }
+                }
+            },
+            confirmButton = { TextButton({ showDetail = false }) { Text(stringResource(R.string.close), color = C.Accent) } }
+        )
+    }
+}
+
+@Composable
+private fun DetailBlock(title: String, body: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(title, fontSize = 12.sp, color = C.Muted, fontWeight = FontWeight.Medium)
+        Text(body, fontFamily = Mono, fontSize = 12.sp, color = C.Soft, lineHeight = 17.sp)
     }
 }
 
