@@ -6,10 +6,10 @@
 
 | | |
 | --- | --- |
-| Version | 2026.10.0 |
+| Version | 2026.10.4 |
 | Source | https://github.com/cloudflare/cloudflared |
-| Download | https://github.com/cloudflare/cloudflared/releases/download/2026.10.0/cloudflared-linux-arm64 |
-| SHA-256 | `e6422b9d4f72d3194bc5a38676f13667c06666523217b842a877d72a80b5ac08` |
+| Download | https://github.com/cloudflare/cloudflared/releases/download/2026.10.4/cloudflared-linux-arm64 |
+| SHA-256 | `2b7203b4fb0ba28a0c1e12f8855ce2c25f76d266a8d5edafac5540b6812acff6` |
 | License | Apache License 2.0 |
 
 cloudflared is developed by Cloudflare. The full license text ships inside the APK at `assets/licenses/cloudflared-LICENSE.txt` (source: `app/src/main/assets/licenses/cloudflared-LICENSE.txt`).
