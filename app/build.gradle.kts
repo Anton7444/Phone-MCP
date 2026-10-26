@@ -25,8 +25,8 @@ android {
         applicationId = "app.phonemcp"
         minSdk = 30
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.2.0"
+        versionCode = 7
+        versionName = "1.2.1"
         // cloudflared is only bundled for arm64 (every current phone).
         ndk { abiFilters += listOf("arm64-v8a") }
     }
@@ -95,7 +95,7 @@ dependencies {
 }
 
 // The bundled cloudflared must be the official release documented in THIRD_PARTY_NOTICES.md.
-val CLOUDFLARED_SHA256 = "e6422b9d4f72d3194bc5a38676f13667c06666523217b842a877d72a80b5ac08"
+val CLOUDFLARED_SHA256 = "2b7203b4fb0ba28a0c1e12f8855ce2c25f76d266a8d5edafac5540b6812acff6"
 val verifyCloudflared by tasks.registering {
     val bin = file("src/main/jniLibs/arm64-v8a/libcloudflared.so")
     inputs.file(bin)
