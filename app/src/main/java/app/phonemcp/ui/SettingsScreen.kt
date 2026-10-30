@@ -377,7 +377,14 @@ private fun TunnelDialog(vm: AppViewModel, s: AppSettings, onDismiss: () -> Unit
     var host by remember { mutableStateOf(s.namedHostname) }
     var token by remember { mutableStateOf("") }
     val hasToken = remember { vm.hasNamedToken() }
-    val valid = type != TunnelType.NAMED || (host.isNotBlank() && (token.isNotBlank() || hasToken))
+    var relayHost by remember { mutableStateOf(s.relayHost) }
+    var relayToken by remember { mutableStateOf("") }
+    val hasRelayToken = remember { vm.hasRelayToken() }
+    val valid = when (type) {
+        TunnelType.NAMED -> host.isNotBlank() && (token.isNotBlank() || hasToken)
+        TunnelType.RELAY -> relayHost.isNotBlank() && (relayToken.isNotBlank() || hasRelayToken)
+        else -> true
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = C.Surface,
@@ -412,12 +419,30 @@ private fun TunnelDialog(vm: AppViewModel, s: AppSettings, onDismiss: () -> Unit
                     )
                     Text(stringResource(R.string.named_help, s.port), fontSize = 12.sp, lineHeight = 18.sp, color = C.Muted, modifier = Modifier.padding(top = 8.dp))
                 }
+                if (type == TunnelType.RELAY) {
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = relayHost, onValueChange = { relayHost = it.trim() }, singleLine = true,
+                        label = { Text(stringResource(R.string.relay_host)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                        colors = fieldColors(), modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = relayToken, onValueChange = { relayToken = it.trim() }, singleLine = true,
+                        label = { Text(stringResource(R.string.relay_token)) },
+                        supportingText = if (hasRelayToken) ({ Text(stringResource(R.string.token_saved_hint), color = C.Muted) }) else null,
+                        visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        colors = fieldColors(), modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                    )
+                    Text(stringResource(R.string.relay_help), fontSize = 12.sp, lineHeight = 18.sp, color = C.Muted, modifier = Modifier.padding(top = 8.dp))
+                }
             }
         },
         confirmButton = {
             TextButton({
                 if (token.isNotBlank()) vm.saveNamedToken(token)
-                vm.update { it.copy(tunnel = type, namedHostname = host.trim()) }
+                if (relayToken.isNotBlank()) vm.saveRelayToken(relayToken)
+                vm.update { it.copy(tunnel = type, namedHostname = host.trim(), relayHost = relayHost.trim()) }
                 onDismiss()
             }, enabled = valid) { Text(stringResource(R.string.save), color = if (valid) C.Accent else C.Dim) }
         },

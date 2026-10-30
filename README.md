@@ -5,7 +5,7 @@ An Android app that turns your phone into an [MCP](https://modelcontextprotocol.
 ## Features
 - **Three privilege modes:** Root (Magisk / KernelSU), Shizuku, or Basic (app sandbox only).
 - **Tools:** `run_shell`, `list_dir`, `read_file`, `write_file`, `file_info`, `screenshot`, `logcat`, `device_info`, plus optional UI control, notification reading and SMS/contacts (each can be switched off).
-- **Connection options:** Cloudflare Quick Tunnel (default, no account), Cloudflare Named Tunnel, Tailscale, or LAN only (TLS with a pinned self-signed certificate).
+- **Connection options:** Cloudflare Quick Tunnel (default, no account), Cloudflare Named Tunnel, **your own server** (a small relay you run on a VPS: fixed URL, no extra app, see [`relay/`](relay/README.md)), Tailscale, or LAN only (TLS with a pinned self-signed certificate).
 - **On-device approval:** destructive commands (`rm`, `dd`, `reboot`, ...) and writes outside allowed folders need you to tap **Allow once** (biometrics). Commands that can brick the phone need two confirmations.
 - **Read-only mode, path allow/deny lists, full-access mode** (for people who know the risks), and an **activity log** you can export.
 - **Auto-stop timer**, biometric gate on start, secret rotation.
@@ -97,8 +97,13 @@ The workflow refuses to publish if the tag does not match `versionName`, if the 
 | `exec/` | Root, Shizuku and Basic executors |
 | `mcp/` | HTTP server, JSON-RPC, tool runner |
 | `policy/` | Command classifier, path rules, approvals |
-| `tunnel/` | cloudflared runner, LAN TLS |
+| `tunnel/` | cloudflared runner, relay client, LAN TLS |
 | `data/` | Settings, secret store, audit log |
+
+## Using your own server (relay)
+If you have a VPS, the **Your own server (relay)** option gives you a fixed URL, `https://<server>/mcp/<secret>`, without Cloudflare or any extra app. The phone connects out to the server over HTTPS and long-polls for requests, so it works on mobile data and behind NAT. Set up the small relay service from [`relay/`](relay/README.md), then enter the server address and the relay token in the app.
+
+TLS ends on your server, so use only a server you control. The relay never sees your device policy: the app still checks the secret and still asks for approval on the phone.
 
 ## Disclaimer
 This app gives remote code execution on your phone by design. Use it only on devices you own, and at your own risk.

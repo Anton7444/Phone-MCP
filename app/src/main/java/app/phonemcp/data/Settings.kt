@@ -15,6 +15,8 @@ data class AppSettings(
     val setupDone: Boolean = false,
     val tunnel: TunnelType = TunnelType.QUICK,
     val namedHostname: String = "",
+    /** Address of the user's own relay server (RELAY tunnel), e.g. 74.222.12.182 */
+    val relayHost: String = "",
     val port: Int = 8000,
     /** 0 = never */
     val autoStopMinutes: Int = 120,
@@ -60,6 +62,7 @@ class SettingsRepository(context: Context) {
                 setupDone = prefs.getBoolean("setupDone", d.setupDone),
                 tunnel = prefs.getString("tunnel", null)?.let { runCatching { TunnelType.valueOf(it) }.getOrNull() } ?: d.tunnel,
                 namedHostname = prefs.getString("namedHostname", d.namedHostname) ?: d.namedHostname,
+                relayHost = prefs.getString("relayHost", d.relayHost) ?: d.relayHost,
                 port = prefs.getInt("port", d.port).takeIf { it in 1024..65535 } ?: d.port,
                 autoStopMinutes = prefs.getInt("autoStopMinutes", d.autoStopMinutes).coerceAtLeast(0),
                 wakeLockMaxMinutes = prefs.getInt("wakeLockMaxMinutes", d.wakeLockMaxMinutes).coerceAtLeast(0),
@@ -87,6 +90,7 @@ class SettingsRepository(context: Context) {
             .putBoolean("setupDone", s.setupDone)
             .putString("tunnel", s.tunnel.name)
             .putString("namedHostname", s.namedHostname)
+            .putString("relayHost", s.relayHost)
             .putInt("port", s.port)
             .putInt("autoStopMinutes", s.autoStopMinutes)
             .putInt("wakeLockMaxMinutes", s.wakeLockMaxMinutes)

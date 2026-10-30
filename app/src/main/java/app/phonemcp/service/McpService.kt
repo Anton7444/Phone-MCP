@@ -34,6 +34,8 @@ import app.phonemcp.mcp.ToolRunner
 import app.phonemcp.tunnel.CloudflaredRunner
 import app.phonemcp.tunnel.LanTls
 import app.phonemcp.tunnel.NetworkAddresses
+import app.phonemcp.tunnel.RelayPlan
+import app.phonemcp.tunnel.RelayRunner
 import app.phonemcp.tunnel.TunnelListener
 import app.phonemcp.tunnel.TunnelPlan
 import kotlinx.coroutines.CancellationException
@@ -60,6 +62,7 @@ class McpService : Service() {
 
     private var server: HttpServer? = null
     private var runner: CloudflaredRunner? = null
+    private var relay: RelayRunner? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private var wifiLock: WifiManager.WifiLock? = null
     private var lockTimeoutMs = -1L
@@ -240,6 +243,8 @@ class McpService : Service() {
         state.update { it.copy(tlsFingerprint = null) }
         runner?.stop()
         runner = null
+        relay?.stop()
+        relay = null
         when (s.tunnel) {
             TunnelType.QUICK -> {
                 runner = CloudflaredRunner(applicationContext, scope, tunnelListener).also { it.start(TunnelPlan.Quick(s.port)) }
@@ -256,6 +261,16 @@ class McpService : Service() {
             }
             TunnelType.TAILSCALE -> directUp(NetworkAddresses.tailscale(), s.port)
             TunnelType.LAN -> directUp(NetworkAddresses.lan(), s.port)
+            TunnelType.RELAY -> {
+                val token = app.secrets.relayToken()
+                val host = s.relayHost.trim()
+                when {
+                    token == null -> tunnelListener.onFailed(TunnelError.NO_TOKEN, "")
+                    host.isEmpty() -> tunnelListener.onFailed(TunnelError.NO_HOSTNAME, "")
+                    else -> relay = RelayRunner(scope, tunnelListener)
+                        .also { it.start(RelayPlan(s.port, host, token, RelayRunner.sha256Hex(app.secrets.mcpSecret()))) }
+                }
+            }
         }
     }
 
@@ -279,6 +294,7 @@ class McpService : Service() {
                     val s = settings.value
                     when (s.tunnel) {
                         TunnelType.QUICK, TunnelType.NAMED -> runner?.restartNow()
+                        TunnelType.RELAY -> relay?.restartNow()
                         TunnelType.TAILSCALE -> {
                             if (NetworkAddresses.tailscale() != boundTailscaleIp) restart()
                             else directUp(boundTailscaleIp, s.port)
@@ -385,6 +401,8 @@ class McpService : Service() {
         netCallback = null
         runner?.stop()
         runner = null
+        relay?.stop()
+        relay = null
         server?.stop()
         server = null
         releaseLocks()

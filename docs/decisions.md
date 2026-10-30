@@ -45,6 +45,11 @@ Non-obvious choices, and the reason for each. Anything that differs from the ori
 - Watchdog: the supervisor restarts the process with back-off (2 s doubling to 30 s); a default-network change restarts it after a 3 s debounce. A new Quick Tunnel URL raises a "URL changed" notification and a banner.
 - With Quick and Named tunnels, TLS ends at Cloudflare's edge, so Cloudflare can see the connector URL (including the secret) and the traffic. Use LAN or Tailscale mode if that is not acceptable.
 
+## Relay tunnel (1.3.0)
+- **A reverse HTTP relay instead of bundling another tunnel binary or an SSH library.** The phone long-polls `POST /relay/<token>/poll` on a server the user runs and answers with `POST /relay/<token>/reply/<id>`; the server (`relay/relay.py`, standard library only) holds the public `/mcp/<secret>` request until the phone replies. It uses only `HttpURLConnection` on the phone and port 443 on the server, so it works where only HTTPS gets out, and the protocol can be tested end to end without a device (`relay/test_relay.py`, `RelayRunnerTest`).
+- The relay token (path secret for the phone side) is separate from the connector secret. The relay learns only `sha256(secret)` from the phone, so wrong paths get a 404 without waking the phone. The phone replays a request only if its path starts with `/mcp/`, and the local server still checks the secret and runs the same approval gate.
+- TLS ends on the user's own server (like a Cloudflare tunnel ends at Cloudflare's edge), so the README says to use a server you control. Poll connections are not kept alive on purpose: one TLS handshake per 25 s is cheaper than debugging stale pooled connections on mobile networks.
+
 ## Safety
 - The command classifier is a speed bump and the UI never calls it a sandbox. The path policy is checked on both the lexical path and the `readlink -f` result, and an allowed path needs *every* form to be inside an allowed root.
 - With on-device approval switched off, dangerous actions are **blocked**, not allowed. That is safer than silently running them.

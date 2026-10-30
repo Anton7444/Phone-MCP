@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.update
 enum class RunStatus { STOPPED, STARTING, RUNNING, ERROR }
 enum class TunnelStatus { OFF, STARTING, UP, RESTARTING, ERROR }
 enum class StartError { NO_MODE, PROBE_FAILED, PORT_IN_USE, INTERNAL }
-enum class TunnelError { NO_BINARY, TIMEOUT, NO_TOKEN, NO_HOSTNAME, NO_NETWORK, PROCESS_FAILED }
+enum class TunnelError { NO_BINARY, TIMEOUT, NO_TOKEN, NO_HOSTNAME, NO_NETWORK, PROCESS_FAILED, RELAY_REJECTED }
 
 data class ServerSnapshot(
     val status: RunStatus = RunStatus.STOPPED,
