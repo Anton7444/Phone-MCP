@@ -475,6 +475,8 @@ fun TunnelScreen(vm: AppViewModel, onStart: () -> Unit) {
             TunnelOption(vm, TunnelType.QUICK, R.string.tunnel_quick, R.string.tunnel_quick_d, recommended = true)
             TunnelOption(vm, TunnelType.NAMED, R.string.tunnel_named, R.string.tunnel_named_d)
             if (vm.wizardTunnel == TunnelType.NAMED) NamedFields(vm)
+            TunnelOption(vm, TunnelType.RELAY, R.string.tunnel_relay, R.string.tunnel_relay_d)
+            if (vm.wizardTunnel == TunnelType.RELAY) RelayFields(vm)
             TunnelOption(vm, TunnelType.TAILSCALE, R.string.tunnel_tailscale, R.string.tunnel_tailscale_d)
             TunnelOption(vm, TunnelType.LAN, R.string.tunnel_lan, R.string.tunnel_lan_d)
         }
@@ -533,6 +535,26 @@ private fun NamedFields(vm: AppViewModel) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), colors = fieldColors(), modifier = Modifier.fillMaxWidth()
         )
         Text(stringResource(R.string.named_help, vm.settings.collectAsState().value.port), fontSize = 12.sp, lineHeight = 18.sp, color = C.Muted)
+    }
+}
+
+@Composable
+private fun RelayFields(vm: AppViewModel) {
+    val hasToken = remember { vm.hasRelayToken() }
+    Column(Modifier.padding(start = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        OutlinedTextField(
+            value = vm.wizardRelayHost, onValueChange = { vm.wizardRelayHost = it.trim() },
+            label = { Text(stringResource(R.string.relay_host)) }, singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), colors = fieldColors(), modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = vm.wizardRelayToken, onValueChange = { vm.wizardRelayToken = it.trim() },
+            label = { Text(stringResource(R.string.relay_token)) }, singleLine = true,
+            supportingText = if (hasToken) ({ Text(stringResource(R.string.token_saved_hint), color = C.Muted) }) else null,
+            visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            colors = fieldColors(), modifier = Modifier.fillMaxWidth()
+        )
+        Text(stringResource(R.string.relay_help), fontSize = 12.sp, lineHeight = 18.sp, color = C.Muted)
     }
 }
 
@@ -687,6 +709,7 @@ fun tunnelErrorText(s: app.phonemcp.ServerSnapshot): String = when (s.tunnelErro
     app.phonemcp.TunnelError.NO_TOKEN -> stringResource(R.string.terr_no_token)
     app.phonemcp.TunnelError.NO_HOSTNAME -> stringResource(R.string.terr_no_host)
     app.phonemcp.TunnelError.NO_NETWORK -> stringResource(R.string.terr_no_network)
+    app.phonemcp.TunnelError.RELAY_REJECTED -> stringResource(R.string.terr_relay_rejected)
     app.phonemcp.TunnelError.PROCESS_FAILED -> stringResource(R.string.terr_process) +
         (if (s.tunnelDetail.isNotBlank()) "\n" + s.tunnelDetail.take(160) else "")
     null -> ""

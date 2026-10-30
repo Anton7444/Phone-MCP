@@ -78,6 +78,7 @@ fun tunnelName(t: TunnelType): String = stringResource(
         TunnelType.NAMED -> R.string.tunnel_named
         TunnelType.TAILSCALE -> R.string.tunnel_tailscale
         TunnelType.LAN -> R.string.tunnel_lan
+        TunnelType.RELAY -> R.string.tunnel_relay
     }
 )
 

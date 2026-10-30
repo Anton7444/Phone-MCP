@@ -2,7 +2,7 @@ package app.phonemcp
 
 enum class PrivilegeMode { ROOT, SHIZUKU, BASIC }
 
-enum class TunnelType { QUICK, NAMED, TAILSCALE, LAN }
+enum class TunnelType { QUICK, NAMED, TAILSCALE, LAN, RELAY }
 
 /** What a backend can do. Drives which MCP tools are advertised. */
 enum class Capability { SHELL, FILES, SCREENSHOT, LOGCAT, DEVICE_INFO, UI_CONTROL, NOTIFICATIONS, SMS_CONTACTS }

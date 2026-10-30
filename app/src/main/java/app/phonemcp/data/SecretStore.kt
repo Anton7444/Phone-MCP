@@ -12,7 +12,7 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 /**
- * Holds the connector secret and the Cloudflare named-tunnel token.
+ * Holds the connector secret, the Cloudflare named-tunnel token and the relay token.
  * Values are AES-GCM encrypted with an Android Keystore key (never leaves secure hardware where available).
  */
 class SecretStore(
@@ -51,6 +51,12 @@ class SecretStore(
 
     fun setNamedToken(token: String?) {
         if (token.isNullOrBlank()) prefs.edit().remove(KEY_TOKEN).apply() else write(KEY_TOKEN, token.trim())
+    }
+
+    fun relayToken(): String? = read(KEY_RELAY)?.takeIf { it.isNotBlank() }
+
+    fun setRelayToken(token: String?) {
+        if (token.isNullOrBlank()) prefs.edit().remove(KEY_RELAY).apply() else write(KEY_RELAY, token.trim())
     }
 
     private fun read(name: String): String? {
@@ -106,6 +112,7 @@ class SecretStore(
         private const val ALIAS = "phonemcp_secret_key"
         private const val KEY_SECRET = "mcp_secret"
         private const val KEY_TOKEN = "named_token"
+        private const val KEY_RELAY = "relay_token"
 
         /** 32 random bytes, URL-safe base64 without padding (43 chars). */
         fun generate(): String {

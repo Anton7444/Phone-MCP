@@ -59,6 +59,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     var wizardTunnel by mutableStateOf(app.settings.value.tunnel)
     var wizardToken by mutableStateOf("")
     var wizardHost by mutableStateOf(app.settings.value.namedHostname)
+    var wizardRelayToken by mutableStateOf("")
+    var wizardRelayHost by mutableStateOf(app.settings.value.relayHost)
     /** True when the wizard was opened from Settings or the Home "fix" button instead of first-run setup. */
     private var wizardReturnsToMain = false
     private var wizardReturnTab = Tab.SETTINGS
@@ -192,13 +194,18 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     // ---- setup finish / server control --------------------------------------------------------------
 
     val canFinishSetup: Boolean
-        get() = wizardTunnel != TunnelType.NAMED || (wizardToken.isNotBlank() && wizardHost.isNotBlank())
+        get() = when (wizardTunnel) {
+            TunnelType.NAMED -> wizardToken.isNotBlank() && wizardHost.isNotBlank()
+            TunnelType.RELAY -> wizardRelayHost.isNotBlank() && (wizardRelayToken.isNotBlank() || hasRelayToken())
+            else -> true
+        }
 
     fun finishSetup() {
         if (!canFinishSetup) return
         if (wizardTunnel == TunnelType.NAMED) app.secrets.setNamedToken(wizardToken)
+        if (wizardTunnel == TunnelType.RELAY && wizardRelayToken.isNotBlank()) app.secrets.setRelayToken(wizardRelayToken)
         app.settings.update {
-            it.copy(mode = wizardMode, tunnel = wizardTunnel, namedHostname = wizardHost.trim(), setupDone = true)
+            it.copy(mode = wizardMode, tunnel = wizardTunnel, namedHostname = wizardHost.trim(), relayHost = wizardRelayHost.trim(), setupDone = true)
         }
         wizardReturnsToMain = false
         urlRevealed = false
@@ -262,6 +269,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun saveNamedToken(token: String) = app.secrets.setNamedToken(token)
     fun hasNamedToken(): Boolean = app.secrets.namedToken() != null
+    fun saveRelayToken(token: String) = app.secrets.setRelayToken(token)
+    fun hasRelayToken(): Boolean = app.secrets.relayToken() != null
 
     // ---- helpers for the UI -------------------------------------------------------------------------
 
