@@ -6,7 +6,6 @@ import app.phonemcp.mcp.ToolHost
 import app.phonemcp.mcp.ToolResult
 import app.phonemcp.tunnel.RelayPlan
 import app.phonemcp.tunnel.RelayRunner
-import com.sun.net.httpserver.HttpExchange
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -18,8 +17,11 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.net.InetSocketAddress
+import java.io.BufferedInputStream
+import java.io.IOException
+import java.net.InetAddress
 import java.net.ServerSocket
+import java.net.Socket
 import java.util.Base64
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CopyOnWriteArrayList
@@ -38,7 +40,7 @@ class RelayRunnerTest {
 
     private lateinit var local: HttpServer
     private var localPort = 0
-    private var fake: com.sun.net.httpserver.HttpServer? = null
+    private var fake: ServerSocket? = null
     private var runner: RelayRunner? = null
 
     private val host = object : ToolHost {
@@ -63,7 +65,7 @@ class RelayRunnerTest {
 
     @After fun stopAll() {
         runner?.stop()
-        fake?.stop(0)
+        try { fake?.close() } catch (_: IOException) {}
         local.stop()
         scope.cancel()
     }
@@ -71,33 +73,73 @@ class RelayRunnerTest {
     /** Fake relay: serves [jobs] to successive polls (then 204), captures replies by job id. [pollStatus] overrides poll answers. */
     private fun startFakeRelay(jobs: List<JSONObject>, replies: CopyOnWriteArrayList<JSONObject>, got: CompletableFuture<Unit>, pollStatus: Int? = null, seenHash: CompletableFuture<String>? = null): String {
         val next = AtomicInteger()
-        val srv = com.sun.net.httpserver.HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
-        srv.createContext("/relay/$token/poll") { ex: HttpExchange ->
-            seenHash?.complete(JSONObject(ex.requestBody.readBytes().toString(Charsets.UTF_8)).getString("h"))
-            ex.requestBody.close()
-            val i = next.getAndIncrement()
-            if (pollStatus != null) {
-                ex.sendResponseHeaders(pollStatus, -1)
-            } else if (i < jobs.size) {
-                val b = jobs[i].toString().toByteArray()
-                ex.responseHeaders.add("Content-Type", "application/json")
-                ex.sendResponseHeaders(200, b.size.toLong())
-                ex.responseBody.use { it.write(b) }
-            } else {
-                Thread.sleep(150)
-                ex.sendResponseHeaders(204, -1)
+        val ss = ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"))
+        fake = ss
+        Thread({
+            while (!ss.isClosed) {
+                val c = try { ss.accept() } catch (_: IOException) { break }
+                Thread({
+                    c.use { sock ->
+                        try { serveFake(sock, jobs, replies, got, pollStatus, seenHash, next) } catch (_: Exception) {}
+                    }
+                }, "fake-relay-conn").apply { isDaemon = true }.start()
             }
-            ex.close()
+        }, "fake-relay").apply { isDaemon = true }.start()
+        return "http://127.0.0.1:${ss.localPort}"
+    }
+
+    private fun readLine(input: BufferedInputStream): String? {
+        val sb = StringBuilder()
+        while (true) {
+            val b = input.read()
+            if (b < 0) return if (sb.isEmpty()) null else sb.toString()
+            if (b == '\n'.code) return sb.toString().trimEnd('\r')
+            sb.append(b.toChar())
         }
-        srv.createContext("/relay/$token/reply/") { ex: HttpExchange ->
-            replies.add(JSONObject(ex.requestBody.readBytes().toString(Charsets.UTF_8)).put("id", ex.requestURI.path.substringAfterLast('/')))
-            ex.sendResponseHeaders(200, -1)
-            ex.close()
-            if (replies.size >= jobs.size) got.complete(Unit)
+    }
+
+    private fun serveFake(sock: Socket, jobs: List<JSONObject>, replies: CopyOnWriteArrayList<JSONObject>, got: CompletableFuture<Unit>, pollStatus: Int?, seenHash: CompletableFuture<String>?, next: AtomicInteger) {
+        val input = BufferedInputStream(sock.getInputStream())
+        val target = (readLine(input) ?: return).split(' ')[1]
+        var len = 0
+        while (true) {
+            val h = readLine(input) ?: return
+            if (h.isEmpty()) break
+            if (h.startsWith("content-length:", ignoreCase = true)) len = h.substringAfter(':').trim().toInt()
         }
-        srv.start()
-        fake = srv
-        return "http://127.0.0.1:${srv.address.port}"
+        val body = ByteArray(len).also { buf ->
+            var off = 0
+            while (off < len) { val n = input.read(buf, off, len - off); if (n < 0) return; off += n }
+        }.toString(Charsets.UTF_8)
+
+        fun respond(status: Int, payload: ByteArray = ByteArray(0), ctype: String? = null) {
+            val head = StringBuilder("HTTP/1.1 $status X\r\n")
+            if (ctype != null) head.append("Content-Type: $ctype\r\n")
+            if (status != 204) head.append("Content-Length: ${payload.size}\r\n")
+            head.append("Connection: close\r\n\r\n")
+            val os = sock.getOutputStream()
+            os.write(head.toString().toByteArray(Charsets.ISO_8859_1))
+            os.write(payload)
+            os.flush()
+        }
+
+        when {
+            target == "/relay/$token/poll" -> {
+                seenHash?.complete(JSONObject(body).getString("h"))
+                val i = next.getAndIncrement()
+                when {
+                    pollStatus != null -> respond(pollStatus)
+                    i < jobs.size -> respond(200, jobs[i].toString().toByteArray(), "application/json")
+                    else -> { Thread.sleep(150); respond(204) }
+                }
+            }
+            target.startsWith("/relay/$token/reply/") -> {
+                replies.add(JSONObject(body).put("id", target.substringAfterLast('/')))
+                respond(200)
+                if (replies.size >= jobs.size) got.complete(Unit)
+            }
+            else -> respond(404)
+        }
     }
 
     private fun job(path: String, body: String, method: String = "POST") = JSONObject()
