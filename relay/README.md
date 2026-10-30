@@ -30,8 +30,8 @@ The phone connects out, so it works on mobile data and behind NAT. TLS ends on y
    handle /relay/* { reverse_proxy 127.0.0.1:18090 { flush_interval -1 } }
    ```
 
-4. In the app choose **Your own server (relay)**, enter the server address (for example `203.0.113.7` or `relay.example.org`) and the relay
-   token, then **Start and get URL**. The connector URL is `https://<server>/mcp/<secret>`.
+4. In the app choose **Your own server (relay)**, enter the server address (for example `74.222.12.182`) and the relay
+   token, then **Start and get URL**. The connector URL is `https://74.222.12.182/mcp/<secret>`.
 
 ## Behaviour
 - Phone not connected: `503`. Phone does not answer within `JOB_TIMEOUT` (170 s, long enough for an approval tap): `504`.

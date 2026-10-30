@@ -101,7 +101,7 @@ The workflow refuses to publish if the tag does not match `versionName`, if the 
 | `data/` | Settings, secret store, audit log |
 
 ## Using your own server (relay)
-If you have a VPS, the **Your own server (relay)** option gives you a fixed URL, `https://<server>/mcp/<secret>`, without Cloudflare or any extra app. The phone connects out to the server over HTTPS and long-polls for requests, so it works on mobile data and behind NAT. Set up the small relay service from [`relay/`](relay/README.md), then enter the server address and the relay token in the app.
+If you have a VPS, the **Your own server (relay)** option gives you a fixed URL, `https://74.222.12.182/mcp/<secret>`, without Cloudflare or any extra app. The phone connects out to the server over HTTPS and long-polls for requests, so it works on mobile data and behind NAT. Set up the small relay service from [`relay/`](relay/README.md), then enter the server address and the relay token in the app.
 
 TLS ends on your server, so use only a server you control. The relay never sees your device policy: the app still checks the secret and still asks for approval on the phone.
 
