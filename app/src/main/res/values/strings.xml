@@ -333,6 +333,6 @@
     <string name="tunnel_relay_d">Fixed URL on a server you run, for example a VPS. The phone connects out to it over HTTPS, so no extra app is needed. Needs the relay service from the relay/ folder.</string>
     <string name="relay_host">Server address</string>
     <string name="relay_token">Relay token</string>
-    <string name="relay_help">Example: 74.222.12.182. Your connector URL becomes https://&lt;address&gt;/mcp/&lt;secret&gt;. TLS ends on your server, so only use a server you control.</string>
+    <string name="relay_help">Example: 203.0.113.7. Your connector URL becomes https://&lt;address&gt;/mcp/&lt;secret&gt;. TLS ends on your server, so only use a server you control.</string>
     <string name="terr_relay_rejected">The server refused the relay token. Check it in Settings.</string>
 </resources>

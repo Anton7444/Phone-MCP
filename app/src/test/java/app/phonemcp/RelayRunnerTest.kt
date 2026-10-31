@@ -207,7 +207,7 @@ class RelayRunnerTest {
     }
 
     @Test fun baseUrlAddsHttpsOnlyWhenNoSchemeIsGiven() {
-        assertEquals("https://74.222.12.182", RelayRunner.baseUrl(" 74.222.12.182/ "))
+        assertEquals("https://203.0.113.7", RelayRunner.baseUrl(" 203.0.113.7/ "))
         assertEquals("https://example.org:8443", RelayRunner.baseUrl("example.org:8443"))
         assertEquals("http://127.0.0.1:9", RelayRunner.baseUrl("http://127.0.0.1:9"))
         assertNotNull(RelayRunner.sha256Hex("x"))

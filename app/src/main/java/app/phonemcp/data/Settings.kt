@@ -15,7 +15,7 @@ data class AppSettings(
     val setupDone: Boolean = false,
     val tunnel: TunnelType = TunnelType.QUICK,
     val namedHostname: String = "",
-    /** Address of the user's own relay server (RELAY tunnel), e.g. 74.222.12.182 */
+    /** Address of the user's own relay server (RELAY tunnel), e.g. 203.0.113.7 */
     val relayHost: String = "",
     val port: Int = 8000,
     /** 0 = never */

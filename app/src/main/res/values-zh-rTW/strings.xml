@@ -332,6 +332,6 @@
     <string name="tunnel_relay_d">網址固定，放在你自己的伺服器（例如 VPS）上。手機主動用 HTTPS 連出去，不需要額外的 App。需要 relay/ 資料夾裡的中繼服務。</string>
     <string name="relay_host">伺服器位址</string>
     <string name="relay_token">中繼 token</string>
-    <string name="relay_help">例如 74.222.12.182。連接器網址會變成 https://&lt;位址&gt;/mcp/&lt;secret&gt;。TLS 在你的伺服器上結束，請只用你自己掌控的伺服器。</string>
+    <string name="relay_help">例如 203.0.113.7。連接器網址會變成 https://&lt;位址&gt;/mcp/&lt;secret&gt;。TLS 在你的伺服器上結束，請只用你自己掌控的伺服器。</string>
     <string name="terr_relay_rejected">伺服器拒絕了中繼 token，請到設定檢查。</string>
 </resources>
