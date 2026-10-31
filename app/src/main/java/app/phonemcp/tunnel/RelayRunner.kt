@@ -25,7 +25,7 @@ data class RelayPlan(val localPort: Int, val host: String, val token: String, va
  * Client for the reverse relay in `relay/relay.py` (a small service you run on your own server).
  *
  * The phone connects OUT over HTTPS and long-polls for requests; the server hands it whatever Claude POSTs to
- * `https://<server>/mcp/<secret>`. Each request is replayed against this app's own local server (127.0.0.1), and the
+ * `https://203.0.113.7/mcp/<secret>`. Each request is replayed against this app's own local server (127.0.0.1), and the
  * answer is posted back. The local server still checks the secret, so the relay adds a hop, not a bypass.
  *
  * Only paths under /mcp/ are replayed. TLS ends on the relay server: use one you control.
@@ -202,7 +202,7 @@ class RelayRunner(
         private val ID = Regex("[0-9a-f]{32}")
         private val ALLOWED_METHODS = setOf("POST", "GET", "DELETE", "PUT", "OPTIONS")
 
-        /** "74.222.12.182" or "https://my.host" -> a base URL without a trailing slash. Plain http only if typed. */
+        /** "203.0.113.7" or "https://my.host" -> a base URL without a trailing slash. Plain http only if typed. */
         fun baseUrl(host: String): String {
             val h = host.trim().trimEnd('/')
             return if (h.startsWith("http://") || h.startsWith("https://")) h else "https://$h"
